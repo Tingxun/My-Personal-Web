@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Camera, X } from 'lucide-react'
 import { photos, type PhotoItem } from '../data'
@@ -43,6 +44,22 @@ export function PhotoGallery() {
   useEffect(() => {
     setLoadedCount(Math.min(PHOTO_INITIAL_COUNT, visiblePhotos.length))
   }, [visiblePhotos.length])
+
+  useEffect(() => {
+    if (!selectedPhoto) return
+
+    const previousOverflow = document.body.style.overflow
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedPhoto(null)
+    }
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [selectedPhoto])
 
   return (
     <motion.section id="photos" className="section" {...sectionMotion}>
@@ -142,28 +159,41 @@ export function PhotoGallery() {
               : 'Archive loaded'}
         </span>
       </div>
-      <AnimatePresence>
-        {selectedPhoto ? (
-          <motion.div className="lightbox" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <button className="lightbox-close" type="button" onClick={() => setSelectedPhoto(null)}>
-              <X size={24} />
-            </button>
-            <motion.img
-              src={selectedPhoto.src}
-              alt={selectedPhoto.title}
-              initial={{ scale: 0.92, y: 20, rotate: -1 }}
-              animate={{ scale: 1, y: 0, rotate: 0 }}
-              exit={{ scale: 0.92, y: 20, rotate: 1 }}
-            />
-            <div>
-              <strong>{selectedPhoto.title}</strong>
-              <span>
-                {selectedPhoto.category} / {selectedPhoto.date} / {selectedPhoto.location}
-              </span>
-            </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
+          {selectedPhoto ? (
+            <motion.div
+              className="lightbox"
+              role="dialog"
+              aria-modal="true"
+              aria-label={selectedPhoto.title}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedPhoto(null)}
+            >
+              <button className="lightbox-close" type="button" onClick={() => setSelectedPhoto(null)} aria-label="Close preview">
+                <X size={24} />
+              </button>
+              <motion.img
+                src={selectedPhoto.src}
+                alt={selectedPhoto.title}
+                initial={{ scale: 0.92, y: 20, rotate: -1 }}
+                animate={{ scale: 1, y: 0, rotate: 0 }}
+                exit={{ scale: 0.92, y: 20, rotate: 1 }}
+                onClick={(event) => event.stopPropagation()}
+              />
+              <div onClick={(event) => event.stopPropagation()}>
+                <strong>{selectedPhoto.title}</strong>
+                <span>
+                  {selectedPhoto.category} / {selectedPhoto.date} / {selectedPhoto.location}
+                </span>
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>,
+        document.body,
+      )}
     </motion.section>
   )
 }

@@ -207,15 +207,17 @@
 .lightbox {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 120;
   display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   place-items: center;
   background: rgba(0, 0, 0, 0.82);
-  padding: 72px 18px 24px;
+  padding: 72px 18px 32px;
+  overflow: auto;
 }
 
 .lightbox img {
-  max-height: min(72vh, 760px);
+  max-height: min(72dvh, 760px);
   width: min(100%, 1100px);
   border: 1px solid var(--line);
   border-radius: 0;
@@ -239,6 +241,7 @@
   position: fixed;
   top: 24px;
   right: 24px;
+  z-index: 121;
   display: grid;
   width: 48px;
   height: 48px;
