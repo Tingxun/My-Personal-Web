@@ -1,8 +1,11 @@
 import { useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 
 const footerWord = 'MYWEB'
-const sliceCount = 22
+const sliceCount = 14
+const fragmentCount = 10
 const sliceHeight = 100 / sliceCount
+const fragmentWidth = 100 / fragmentCount
+const idleStrength = 0.36
 
 type DistortionState = {
   x: number
@@ -44,7 +47,16 @@ export function DistortionFooter() {
     const { x, y, xPx, yPx } = getWordPointerPosition(event)
 
     lastPointerRef.current = { x: event.clientX, y: event.clientY, time: performance.now() }
-    setDistortion({ x, y, xPx, yPx, strength: 0.72, velocityX: 0, velocityY: 0 })
+    setDistortion((current) => ({
+      ...current,
+      x,
+      y,
+      xPx,
+      yPx,
+      strength: idleStrength,
+      velocityX: 0,
+      velocityY: 0,
+    }))
   }
 
   const updateDistortion = (event: PointerEvent<HTMLDivElement>) => {
@@ -57,16 +69,24 @@ export function DistortionFooter() {
     const speed = lastPointer.time ? Math.min(1.65, Math.hypot(dx, dy) / elapsed) : 0
     const velocityX = Math.max(-1.7, Math.min(1.7, dx / elapsed))
     const velocityY = Math.max(-1.7, Math.min(1.7, dy / elapsed))
-    const strength = Math.max(0.72, Math.min(1.85, speed * 1.38))
+    const strength = Math.max(idleStrength, Math.min(1, speed * 1.38))
 
     lastPointerRef.current = { x: event.clientX, y: event.clientY, time: now }
-    setDistortion({ x, y, xPx, yPx, strength, velocityX, velocityY })
+    setDistortion((current) => ({
+      x: lerp(current.x, x, 0.34),
+      y: lerp(current.y, y, 0.34),
+      xPx: lerp(current.xPx, xPx, 0.34),
+      yPx: lerp(current.yPx, yPx, 0.34),
+      strength: lerp(current.strength, strength, 0.42),
+      velocityX: lerp(current.velocityX, velocityX, 0.4),
+      velocityY: lerp(current.velocityY, velocityY, 0.4),
+    }))
   }
 
   return (
     <footer className="site-footer">
       <div
-        className="distortion-footer"
+        className={distortion.strength > 0 ? 'distortion-footer distorting' : 'distortion-footer'}
         onPointerEnter={primePointer}
         onPointerMove={updateDistortion}
         onPointerLeave={() => setDistortion((current) => ({ ...current, strength: 0, velocityX: 0, velocityY: 0 }))}
@@ -84,24 +104,33 @@ export function DistortionFooter() {
         <span className="distortion-label">PERSONAL GEOMETRIC SPACE</span>
         <div ref={wordRef} className="distortion-word" aria-label={footerWord}>
           <strong>{footerWord}</strong>
-          {Array.from({ length: sliceCount }, (_, index) => (
-            <i
-              key={index}
-              aria-hidden="true"
-              data-text={footerWord}
-              style={
-                {
-                  '--slice-index': index,
-                  '--slice-top': `${index * sliceHeight}%`,
-                  '--slice-bottom': `${100 - (index + 1) * sliceHeight}%`,
-                  '--slice-shift': `${getSliceShift(index, distortion)}px`,
-                  '--slice-lift': `${getSliceLift(index, distortion)}px`,
-                  '--slice-skew': `${getSliceSkew(index, distortion)}deg`,
-                } as CSSProperties
-              }
-            />
-          ))}
-          <em aria-hidden="true" />
+          {Array.from({ length: sliceCount * fragmentCount }, (_, fragmentIndex) => {
+            const sliceIndex = Math.floor(fragmentIndex / fragmentCount)
+            const columnIndex = fragmentIndex % fragmentCount
+            const falloff = getFragmentFalloff(sliceIndex, columnIndex, distortion)
+
+            return (
+              <i
+                key={fragmentIndex}
+                aria-hidden="true"
+                data-text={footerWord}
+                style={
+                  {
+                    '--slice-index': sliceIndex,
+                    '--fragment-index': columnIndex,
+                    '--slice-top': `${sliceIndex * sliceHeight}%`,
+                    '--slice-bottom': `${100 - (sliceIndex + 1) * sliceHeight}%`,
+                    '--fragment-left': `${columnIndex * fragmentWidth}%`,
+                    '--fragment-right': `${100 - (columnIndex + 1) * fragmentWidth}%`,
+                    '--fragment-opacity': falloff > 0.04 ? 1 : 0,
+                    '--slice-shift': `${getSliceShift(sliceIndex, columnIndex, distortion, falloff)}px`,
+                    '--slice-lift': `${getSliceLift(sliceIndex, columnIndex, distortion, falloff)}px`,
+                    '--slice-skew': `${getSliceSkew(sliceIndex, columnIndex, distortion, falloff)}deg`,
+                  } as CSSProperties
+                }
+              />
+            )
+          })}
         </div>
       </div>
       <p>Built from local memories, games, music, and code. Ready for the next layer.</p>
@@ -109,28 +138,36 @@ export function DistortionFooter() {
   )
 }
 
-function getSliceShift(index: number, distortion: DistortionState) {
-  const centerY = (index + 0.5) * sliceHeight
-  const yFalloff = Math.max(0, 1 - Math.abs(centerY - distortion.y) / 28)
-  const alternating = index % 2 === 0 ? 1 : -1
-  const wave = Math.sin(index * 1.7 + distortion.x * 0.13) * 20
+function getFragmentFalloff(sliceIndex: number, columnIndex: number, distortion: DistortionState) {
+  const centerX = (columnIndex + 0.5) * fragmentWidth
+  const centerY = (sliceIndex + 0.5) * sliceHeight
+  const normalizedX = Math.abs(centerX - distortion.x) / 25
+  const normalizedY = Math.abs(centerY - distortion.y) / 34
+  const distance = Math.hypot(normalizedX, normalizedY)
+
+  return Math.pow(Math.max(0, 1 - distance), 1.35)
+}
+
+function getSliceShift(sliceIndex: number, columnIndex: number, distortion: DistortionState, falloff: number) {
+  const alternating = (sliceIndex + columnIndex) % 2 === 0 ? 1 : -1
+  const wave = Math.sin(sliceIndex * 1.7 + columnIndex * 0.9 + distortion.x * 0.13) * 20
   const velocityPush = distortion.velocityX * 118
 
-  return (velocityPush + wave * alternating) * yFalloff * distortion.strength
+  return (velocityPush + wave * alternating) * falloff * distortion.strength
 }
 
-function getSliceLift(index: number, distortion: DistortionState) {
-  const centerY = (index + 0.5) * sliceHeight
-  const yFalloff = Math.max(0, 1 - Math.abs(centerY - distortion.y) / 28)
-  const alternating = index % 3 === 0 ? -1 : 1
+function getSliceLift(sliceIndex: number, columnIndex: number, distortion: DistortionState, falloff: number) {
+  const alternating = (sliceIndex + columnIndex) % 3 === 0 ? -1 : 1
 
-  return (distortion.velocityY * 44 + alternating * 9) * yFalloff * distortion.strength
+  return (distortion.velocityY * 44 + alternating * 9) * falloff * distortion.strength
 }
 
-function getSliceSkew(index: number, distortion: DistortionState) {
-  const centerY = (index + 0.5) * sliceHeight
-  const yFalloff = Math.max(0, 1 - Math.abs(centerY - distortion.y) / 34)
-  const alternating = index % 2 === 0 ? -1 : 1
+function getSliceSkew(sliceIndex: number, columnIndex: number, distortion: DistortionState, falloff: number) {
+  const alternating = (sliceIndex + columnIndex) % 2 === 0 ? -1 : 1
 
-  return alternating * yFalloff * distortion.strength * 7
+  return alternating * falloff * distortion.strength * 7
+}
+
+function lerp(from: number, to: number, amount: number) {
+  return from + (to - from) * amount
 }
