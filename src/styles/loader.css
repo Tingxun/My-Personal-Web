@@ -1,0 +1,81 @@
+.page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(109, 232, 255, 0.16), transparent 28%),
+    rgba(7, 9, 15, 0.88);
+  backdrop-filter: blur(16px);
+}
+
+.page-loader span {
+  margin-top: 132px;
+  color: var(--cyan);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.loader-mark {
+  position: absolute;
+  width: 132px;
+  aspect-ratio: 1;
+}
+
+.loader-mark i {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(109, 232, 255, 0.56);
+  clip-path: polygon(50% 0, 100% 32%, 82% 100%, 18% 100%, 0 32%);
+  animation: loaderSpin 1.2s linear infinite;
+}
+
+.loader-mark i:nth-child(2) {
+  inset: 18px;
+  border-color: rgba(255, 91, 180, 0.56);
+  animation-direction: reverse;
+  animation-duration: 0.9s;
+}
+
+.loader-mark i:nth-child(3) {
+  inset: 38px;
+  border-color: rgba(157, 255, 119, 0.6);
+  animation-duration: 1.7s;
+}
+
+@keyframes loaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes marqueeSlide {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes radarSweep {
+  0%,
+  100% {
+    transform: translateY(-130%) rotate(-28deg);
+  }
+
+  50% {
+    transform: translateY(130%) rotate(-28deg);
+  }
+}
+
+@keyframes radarPulse {
+  from {
+    opacity: 0.75;
+    transform: scale(0.4);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
+

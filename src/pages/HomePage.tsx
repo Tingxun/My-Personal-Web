@@ -105,7 +105,7 @@ export function HomePage({ goToPage }: { goToPage: (page: PageId) => void }) {
                 '--metaball-child-size': `${42 + metaballOffset.strength * 52}px`,
                 '--metaball-child-mask-x': `${110 + metaballOffset.x}px`,
                 '--metaball-child-mask-y': `${75 + metaballOffset.y}px`,
-                '--metaball-child-mask-radius': `${32 + metaballOffset.strength * 38}px`,
+                '--metaball-child-mask-radius': `${48 + metaballOffset.strength * 52}px`,
                 '--metaball-child-glow': 0.16 + metaballOffset.strength * 0.44,
                 '--metaball-child-opacity': metaballOffset.strength * 0.96,
                 '--metaball-child-scale': 0.24 + metaballOffset.strength * 0.98,
@@ -146,10 +146,14 @@ export function HomePage({ goToPage }: { goToPage: (page: PageId) => void }) {
               </small>
             </div>
           </motion.div>
-          <InteractiveCard className="orbit-card music" onClick={() => goToPage('memories')}>
+          <motion.div
+            className="interactive-card orbit-card music static"
+            whileHover={{ y: -8, rotate: -1.2, scale: 1.035 }}
+            transition={{ type: 'spring', stiffness: 330, damping: 22 }}
+          >
             <Music2 size={20} />
             API + Local fallback
-          </InteractiveCard>
+          </motion.div>
           <InteractiveCard className="orbit-card games" onClick={() => goToPage('memories')}>
             <Gamepad2 size={20} />
             Steam library

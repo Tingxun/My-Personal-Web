@@ -1,0 +1,46 @@
+.section {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 74px 0;
+}
+
+.page-hero {
+  min-height: 48vh;
+  padding-top: 150px;
+}
+
+.page-hero h1 {
+  margin: 18px 0 14px;
+  font-size: clamp(3rem, 8vw, 7.5rem);
+  line-height: 0.9;
+}
+
+.page-hero p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.9;
+}
+
+.section-heading {
+  display: grid;
+  max-width: 760px;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 4.2rem);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.section-heading p,
+.module-note {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.8;
+}
+

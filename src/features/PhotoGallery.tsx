@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useCallback, useEffect, useMemo, useState, useTransition } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Camera, X } from 'lucide-react'
 import { photos, type PhotoItem } from '../data'
@@ -11,13 +11,11 @@ export function PhotoGallery() {
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoItem | null>(null)
   const [loadedCount, setLoadedCount] = useState(PHOTO_INITIAL_COUNT)
   const [isPending, startTransition] = useTransition()
-  const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const visiblePhotos = useMemo(
     () => (category === '全部' ? photos : photos.filter((item) => item.category === category)),
     [category],
   )
   const loadedPhotos = visiblePhotos.slice(0, loadedCount)
-  const hasMorePhotos = loadedCount < visiblePhotos.length
   const loadPercent = visiblePhotos.length ? Math.min(1, loadedCount / visiblePhotos.length) : 1
 
   const loadToCount = useCallback(
@@ -34,7 +32,10 @@ export function PhotoGallery() {
 
   const loadFromRail = (clientX: number, clientY: number, rail: HTMLElement) => {
     const rect = rail.getBoundingClientRect()
-    const rawPercent = rect.width > rect.height * 2 ? (clientX - rect.left) / rect.width : (clientY - rect.top) / rect.height
+    const isHorizontal = rect.width > rect.height * 2
+    const rawPercent = isHorizontal
+      ? (clientX - rect.left - 72) / Math.max(1, rect.width - 94)
+      : 1 - (clientY - rect.top - 48) / Math.max(1, rect.height - 70)
     const percent = Math.min(1, Math.max(0, rawPercent))
     loadToCount(Math.ceil(visiblePhotos.length * percent))
   }
@@ -42,20 +43,6 @@ export function PhotoGallery() {
   useEffect(() => {
     setLoadedCount(Math.min(PHOTO_INITIAL_COUNT, visiblePhotos.length))
   }, [visiblePhotos.length])
-
-  useEffect(() => {
-    const target = loadMoreRef.current
-    if (!target || !hasMorePhotos) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) loadNextBatch()
-      },
-      { rootMargin: '420px 0px' },
-    )
-    observer.observe(target)
-    return () => observer.disconnect()
-  }, [hasMorePhotos, loadNextBatch])
 
   return (
     <motion.section id="photos" className="section" {...sectionMotion}>
@@ -146,14 +133,14 @@ export function PhotoGallery() {
           <b />
         </div>
       </div>
-      <div ref={loadMoreRef} className="photo-sentinel">
-        {hasMorePhotos ? (
-          <button type="button" onClick={loadNextBatch} disabled={isPending}>
-            {isPending ? 'Loading...' : `Load ${Math.min(PHOTO_LOAD_STEP, visiblePhotos.length - loadedCount)} more`}
-          </button>
-        ) : (
-          <span>Archive loaded</span>
-        )}
+      <div className="photo-sentinel" aria-live="polite">
+        <span>
+          {isPending
+            ? 'Loading...'
+            : loadedCount < visiblePhotos.length
+              ? 'Drag the rail to reveal more'
+              : 'Archive loaded'}
+        </span>
       </div>
       <AnimatePresence>
         {selectedPhoto ? (

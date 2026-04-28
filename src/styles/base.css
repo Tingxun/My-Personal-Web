@@ -1,0 +1,176 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter, "Noto Sans SC", "Microsoft YaHei", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --bg: #07090f;
+  --panel: rgba(14, 18, 30, 0.76);
+  --panel-solid: #101522;
+  --line: rgba(255, 255, 255, 0.13);
+  --text: #eff6ff;
+  --muted: #9aa8bd;
+  --cyan: #6de8ff;
+  --pink: #ff5bb4;
+  --green: #9dff77;
+  --acid: #20ff00;
+  --amber: #ffc857;
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+  --pointer-x: 50vw;
+  --pointer-y: 50vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    radial-gradient(circle at 28% 8%, rgba(109, 232, 255, 0.16), transparent 32%),
+    radial-gradient(circle at 82% 18%, rgba(255, 91, 180, 0.12), transparent 28%),
+    linear-gradient(135deg, #07090f 0%, #11131c 44%, #080a10 100%);
+  background-size:
+    42px 42px,
+    42px 42px,
+    auto,
+    auto,
+    auto;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+#root {
+  overflow-x: clip;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+.app-shell {
+  position: relative;
+  min-height: 100vh;
+}
+
+.app-shell::before {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  content: "";
+  background: radial-gradient(circle 220px at var(--pointer-x) var(--pointer-y), rgba(32, 255, 0, 0.12), transparent 70%);
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.geometry-field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.72;
+}
+
+.topbar {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  z-index: 20;
+  display: flex;
+  width: min(1120px, calc(100% - 32px));
+  min-height: 56px;
+  transform: translateX(-50%);
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: rgba(7, 9, 15, 0.72);
+  padding: 10px 12px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+}
+
+.brand,
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand {
+  font-weight: 800;
+  letter-spacing: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.brand svg {
+  color: var(--cyan);
+}
+
+.topbar nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.topbar nav button {
+  border: 1px solid transparent;
+  border-radius: 0;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  padding: 8px 12px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.topbar nav button:hover,
+.topbar nav button.active {
+  transform: translateY(-2px) skewX(-5deg);
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+main {
+  position: relative;
+  z-index: 1;
+}
+

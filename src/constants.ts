@@ -6,7 +6,7 @@ export const pages: Array<{ id: PageId; label: string; hash: string }> = [
   { id: 'lab', label: 'Lab', hash: '#lab' },
 ]
 
-export const PHOTO_INITIAL_COUNT = 9
+export const PHOTO_INITIAL_COUNT = 10
 export const PHOTO_LOAD_STEP = 6
 
 export const sectionMotion = {

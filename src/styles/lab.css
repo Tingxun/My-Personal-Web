@@ -1,0 +1,90 @@
+.code-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.skill-panel {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+}
+
+.skill-row {
+  display: grid;
+  gap: 10px;
+}
+
+.skill-row > div:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.skill-row span {
+  color: var(--muted);
+  font-size: 0.88rem;
+  text-align: right;
+}
+
+.skill-meter {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.skill-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cyan), var(--green), var(--amber));
+}
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.project-card {
+  display: grid;
+  position: relative;
+  overflow: hidden;
+  gap: 10px;
+  min-height: 246px;
+  clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%, 0 16px);
+  padding: 16px;
+}
+
+.project-card.featured {
+  border-color: rgba(109, 232, 255, 0.4);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chips small {
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.06);
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  padding: 5px 8px;
+  color: #dce8f8;
+}
+
+.project-card code {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
