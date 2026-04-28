@@ -63,8 +63,7 @@
   }
 
   .hero-section,
-  .section,
-  .site-footer {
+  .section {
     width: min(100% - 24px, 1180px);
   }
 
@@ -229,5 +228,19 @@
 
   .skill-row span {
     text-align: left;
+  }
+
+  .distortion-footer {
+    min-height: 150px;
+  }
+
+  .distortion-label {
+    left: 14px;
+    font-size: 0.68rem;
+  }
+
+  .distortion-word {
+    inset: 18px 12px 0;
+    font-size: clamp(3.6rem, 24vw, 6rem);
   }
 }

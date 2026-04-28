@@ -1,6 +1,7 @@
 import { AnimatePresence } from 'framer-motion'
 import { Grid3X3 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { DistortionFooter } from './components/DistortionFooter'
 import { GeometryField } from './components/GeometryField'
 import { PageLoader } from './components/PageLoader'
 import { pages } from './constants'
@@ -85,10 +86,7 @@ function App() {
           {activePage === 'lab' ? <LabPage /> : null}
         </AnimatePresence>
 
-        <footer className="site-footer">
-          <span>PERSONAL GEOMETRIC SPACE</span>
-          <p>Built from local memories, games, music, and code. Ready for the next layer.</p>
-        </footer>
+        <DistortionFooter />
       </main>
       <PersistentMusicDock music={music} goToPage={goToPage} />
     </div>
