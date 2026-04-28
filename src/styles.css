@@ -330,7 +330,7 @@ main {
   --metaball-bridge-x: 42px;
   --metaball-bridge-scale: 0.35;
   --metaball-child-size: 42px;
-  --metaball-child-mask-x: 204px;
+  --metaball-child-mask-x: 110px;
   --metaball-child-mask-y: 75px;
   --metaball-child-mask-radius: 32px;
   --metaball-child-glow: 0.16;
@@ -489,11 +489,8 @@ main {
 .type-layer {
   position: absolute;
   inset: 0;
-  display: grid;
-  gap: 2px;
+  display: block;
   width: 100%;
-  align-content: center;
-  justify-items: center;
   letter-spacing: 0;
 }
 
@@ -525,18 +522,21 @@ main {
 
 .metaball-core b {
   display: block;
-  justify-self: center;
+  position: absolute;
+  left: 50%;
+  width: max-content;
   font-size: 3.72rem;
   white-space: nowrap;
 }
 
 .metaball-core b:first-child {
-  transform: none;
+  top: 22px;
+  transform: translateX(-50%);
 }
 
 .metaball-core b:last-child {
-  justify-self: center;
-  transform: none;
+  top: 76px;
+  transform: translateX(-50%);
 }
 
 @keyframes core-breathe {

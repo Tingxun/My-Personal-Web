@@ -103,7 +103,7 @@ export function HomePage({ goToPage }: { goToPage: (page: PageId) => void }) {
                 '--metaball-bridge-x': `${86 + metaballOffset.strength * 18}px`,
                 '--metaball-bridge-scale': 0.18 + metaballOffset.strength * 0.82,
                 '--metaball-child-size': `${42 + metaballOffset.strength * 52}px`,
-                '--metaball-child-mask-x': `${204 + metaballOffset.x}px`,
+                '--metaball-child-mask-x': `${110 + metaballOffset.x}px`,
                 '--metaball-child-mask-y': `${75 + metaballOffset.y}px`,
                 '--metaball-child-mask-radius': `${32 + metaballOffset.strength * 38}px`,
                 '--metaball-child-glow': 0.16 + metaballOffset.strength * 0.44,
