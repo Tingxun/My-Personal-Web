@@ -155,8 +155,8 @@
   --metaball-bridge-scale: 0.35;
   --metaball-child-size: 42px;
   --metaball-child-mask-x: 110px;
-  --metaball-child-mask-y: 75px;
-  --metaball-child-mask-radius: 48px;
+  --metaball-child-mask-y: 73px;
+  --metaball-child-mask-radius: 64px;
   --metaball-child-glow: 0.16;
   --metaball-child-opacity: 0;
   --metaball-child-scale: 0.24;
@@ -215,7 +215,7 @@
 }
 
 .metaball-main {
-  width: 206px;
+  width: 238px;
   aspect-ratio: 1;
   background:
     radial-gradient(circle at 72% 20%, rgba(18, 28, 38, 0.96), transparent 23%),
@@ -289,15 +289,17 @@
 }
 
 .metaball-type {
-  --type-ball-x: 50%;
-  --type-ball-y: 50%;
-  --type-ball-radius: 112px;
-  position: relative;
+  --type-ball-x: 330px;
+  --type-ball-y: 73px;
+  --type-ball-radius: 144px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
   z-index: 3;
   display: block;
-  width: 220px;
+  width: 660px;
   min-height: 144px;
-  transform: translateX(-22px);
+  transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
