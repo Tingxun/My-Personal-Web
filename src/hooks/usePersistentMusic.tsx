@@ -1,0 +1,164 @@
+import { useEffect, useRef, useState } from 'react'
+import { localTracks, type MusicTrack } from '../data'
+import type { AudioGraph, MusicController } from '../types'
+
+function useMusicTracks() {
+  const [tracks, setTracks] = useState<MusicTrack[]>(localTracks)
+  const [sourceNote, setSourceNote] = useState('Local fallback ready')
+
+  useEffect(() => {
+    const apiBase = import.meta.env.VITE_NETEASE_API_BASE as string | undefined
+    const playlistId = import.meta.env.VITE_NETEASE_PLAYLIST_ID as string | undefined
+    if (!apiBase || !playlistId) return
+
+    const controller = new AbortController()
+    const endpoint = `${apiBase.replace(/\/$/, '')}/playlist/detail?id=${playlistId}`
+
+    fetch(endpoint, { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error(`Music API responded ${response.status}`)
+        return response.json() as Promise<{
+          playlist?: {
+            tracks?: Array<{
+              id: number
+              name: string
+              al?: { picUrl?: string }
+              ar?: Array<{ name: string }>
+            }>
+          }
+        }>
+      })
+      .then((payload) => {
+        const imported = payload.playlist?.tracks?.slice(0, 6).map((track) => ({
+          id: `netease-${track.id}`,
+          title: track.name,
+          artist: track.ar?.map((artist) => artist.name).join(' / ') || 'Unknown Artist',
+          cover: track.al?.picUrl || '/assets/optimized/photos/wlop-02-thumb.webp',
+          audioUrl: '',
+          source: 'netease' as const,
+          externalUrl: `https://music.163.com/#/song?id=${track.id}`,
+        }))
+
+        if (imported?.length) {
+          setTracks([...imported, ...localTracks])
+          setSourceNote('Netease playlist loaded, playback depends on external availability')
+        }
+      })
+      .catch(() => setSourceNote('Music API unavailable, using local fallback'))
+
+    return () => controller.abort()
+  }, [])
+
+  return { tracks, sourceNote }
+}
+
+export function usePersistentMusic(): MusicController {
+  const { tracks, sourceNote } = useMusicTracks()
+  const [activeTrack, setActiveTrack] = useState(tracks[0])
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [volume, setVolume] = useState(0.72)
+  const [progress, setProgress] = useState(0)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioGraphRef = useRef<AudioGraph | null>(null)
+
+  useEffect(() => {
+    setActiveTrack((current) => tracks.find((track) => track.id === current.id) || tracks[0])
+  }, [tracks])
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    audio.volume = volume
+  }, [volume])
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    if (!activeTrack.audioUrl) {
+      audio.pause()
+      setIsPlaying(false)
+      setProgress(0)
+      return
+    }
+    audio.load()
+    audio.volume = volume
+    setIsPlaying(false)
+    setProgress(0)
+  }, [activeTrack])
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const syncProgress = () => {
+      if (!Number.isFinite(audio.duration) || audio.duration <= 0) {
+        setProgress(0)
+        return
+      }
+      setProgress(audio.currentTime / audio.duration)
+    }
+
+    const syncEnd = () => {
+      setIsPlaying(false)
+      setProgress(0)
+    }
+
+    audio.addEventListener('timeupdate', syncProgress)
+    audio.addEventListener('loadedmetadata', syncProgress)
+    audio.addEventListener('ended', syncEnd)
+    return () => {
+      audio.removeEventListener('timeupdate', syncProgress)
+      audio.removeEventListener('loadedmetadata', syncProgress)
+      audio.removeEventListener('ended', syncEnd)
+    }
+  }, [])
+
+  const togglePlayback = async () => {
+    const audio = audioRef.current
+    if (!audio || !activeTrack.audioUrl) return
+
+    if (!audioGraphRef.current) {
+      const windowWithWebkit = window as Window & typeof globalThis & { webkitAudioContext?: typeof AudioContext }
+      const AudioContextClass = window.AudioContext || windowWithWebkit.webkitAudioContext
+      if (AudioContextClass) {
+        const context = new AudioContextClass()
+        const analyser = context.createAnalyser()
+        const source = context.createMediaElementSource(audio)
+        analyser.fftSize = 128
+        source.connect(analyser)
+        analyser.connect(context.destination)
+        audioGraphRef.current = {
+          context,
+          analyser,
+          data: new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>,
+        }
+      }
+    }
+
+    if (audioGraphRef.current?.context.state === 'suspended') {
+      await audioGraphRef.current.context.resume()
+    }
+
+    if (audio.paused) {
+      await audio.play()
+      setIsPlaying(true)
+    } else {
+      audio.pause()
+      setIsPlaying(false)
+    }
+  }
+
+  return {
+    tracks,
+    sourceNote,
+    activeTrack,
+    isPlaying,
+    volume,
+    progress,
+    setVolume,
+    setActiveTrack,
+    togglePlayback,
+    audioGraphRef,
+    audioElement: <audio ref={audioRef} src={activeTrack.audioUrl} />,
+  }
+}
