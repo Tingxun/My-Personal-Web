@@ -7,6 +7,7 @@ import { PageLoader } from './components/PageLoader'
 import { pages } from './constants'
 import { PersistentMusicDock } from './features/PersistentMusicDock'
 import { usePersistentMusic } from './hooks/usePersistentMusic'
+import { GuestbookPage } from './pages/GuestbookPage'
 import { HomePage } from './pages/HomePage'
 import { LabPage } from './pages/LabPage'
 import { MemoriesPage } from './pages/MemoriesPage'
@@ -84,6 +85,7 @@ function App() {
           {activePage === 'home' ? <HomePage goToPage={goToPage} /> : null}
           {activePage === 'memories' ? <MemoriesPage music={music} /> : null}
           {activePage === 'lab' ? <LabPage /> : null}
+          {activePage === 'guestbook' ? <GuestbookPage /> : null}
         </AnimatePresence>
 
         <DistortionFooter />

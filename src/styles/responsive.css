@@ -4,7 +4,8 @@
   .game-layout,
   .code-layout,
   .signal-layout,
-  .tactile-grid {
+  .tactile-grid,
+  .guestbook-layout {
     grid-template-columns: 1fr;
   }
 
@@ -14,6 +15,7 @@
   }
 
   .hero-orbit {
+    --orbit-scale: 0.86;
     min-height: 430px;
   }
 
@@ -38,6 +40,10 @@
   .drag-deck,
   .metaball-stage {
     min-height: 320px;
+  }
+
+  .guestbook-wall {
+    min-height: 0;
   }
 }
 
@@ -72,7 +78,16 @@
   }
 
   .hero-orbit {
-    min-height: 380px;
+    --orbit-scale: 0.54;
+    min-height: 330px;
+  }
+
+  .hero-orbit::before {
+    width: min(320px, 84vw);
+  }
+
+  .hero-orbit::after {
+    width: min(230px, 60vw);
   }
 
   .orbit-card {
@@ -228,6 +243,19 @@
 
   .skill-row span {
     text-align: left;
+  }
+
+  .guestbook-tone-grid,
+  .guestbook-wall {
+    grid-template-columns: 1fr;
+  }
+
+  .guestbook-panel {
+    padding: 14px;
+  }
+
+  .guestbook-entry {
+    min-height: 150px;
   }
 
   .distortion-footer {

@@ -1,7 +1,7 @@
 import type { MutableRefObject, ReactNode } from 'react'
 import type { MusicTrack } from './data'
 
-export type PageId = 'home' | 'memories' | 'lab'
+export type PageId = 'home' | 'memories' | 'lab' | 'guestbook'
 
 export type AudioGraph = {
   context: AudioContext

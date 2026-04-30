@@ -146,19 +146,15 @@ export function HomePage({ goToPage }: { goToPage: (page: PageId) => void }) {
               </small>
             </div>
           </motion.div>
-          <motion.div
-            className="interactive-card orbit-card music static"
-            whileHover={{ y: -8, rotate: -1.2, scale: 1.035 }}
-            transition={{ type: 'spring', stiffness: 330, damping: 22 }}
-          >
+          <InteractiveCard className="orbit-card music static">
             <Music2 size={20} />
             API + Local fallback
-          </motion.div>
-          <InteractiveCard className="orbit-card games" onClick={() => goToPage('memories')}>
+          </InteractiveCard>
+          <InteractiveCard className="orbit-card games">
             <Gamepad2 size={20} />
             Steam library
           </InteractiveCard>
-          <InteractiveCard className="orbit-card code" onClick={() => goToPage('lab')}>
+          <InteractiveCard className="orbit-card code">
             <Code2 size={20} />
             Project matrix
           </InteractiveCard>

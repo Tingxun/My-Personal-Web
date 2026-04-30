@@ -175,6 +175,14 @@ export const localTracks: MusicTrack[] = [
     audioUrl: '/assets/music/shape-of-you.mp3',
     source: 'local',
   },
+  {
+    id: 'the-great-despair',
+    title: 'THE GREAT DESPAIR',
+    artist: 'Local Music',
+    cover: '/assets/optimized/photos/wlop-01-thumb.webp',
+    audioUrl: '/assets/music/THE%20GREAT%20DESPAIR.mp3',
+    source: 'local',
+  },
 ]
 
 export const skills = [

@@ -4,9 +4,10 @@ export const pages: Array<{ id: PageId; label: string; hash: string }> = [
   { id: 'home', label: 'Overview', hash: '#home' },
   { id: 'memories', label: 'Memories', hash: '#memories' },
   { id: 'lab', label: 'Lab', hash: '#lab' },
+  { id: 'guestbook', label: 'Guestbook', hash: '#guestbook' },
 ]
 
-export const PHOTO_INITIAL_COUNT = 10
+export const PHOTO_INITIAL_COUNT = 5
 export const PHOTO_LOAD_STEP = 6
 
 export const sectionMotion = {

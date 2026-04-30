@@ -88,6 +88,7 @@
 }
 
 .hero-orbit {
+  --orbit-scale: 1;
   position: relative;
   display: grid;
   min-height: 520px;
@@ -197,7 +198,7 @@
 
 .metaball-liquid {
   position: absolute;
-  inset: -118px;
+  inset: calc(-118px * var(--orbit-scale));
   z-index: 1;
   filter: url("#orbit-goo");
   pointer-events: none;
@@ -215,7 +216,7 @@
 }
 
 .metaball-main {
-  width: 238px;
+  width: calc(238px * var(--orbit-scale));
   aspect-ratio: 1;
   background:
     radial-gradient(circle at 72% 20%, rgba(18, 28, 38, 0.96), transparent 23%),
@@ -248,7 +249,7 @@
 }
 
 .metaball-child {
-  width: var(--metaball-child-size);
+  width: calc(var(--metaball-child-size) * var(--orbit-scale));
   aspect-ratio: 1;
   background:
     radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.1), transparent 20%),
@@ -256,7 +257,10 @@
   box-shadow: 0 0 22px rgba(0, 0, 0, 0.3);
   opacity: var(--metaball-child-opacity);
   transform:
-    translate(calc(-50% + var(--metaball-x)), calc(-50% + var(--metaball-y)))
+    translate(
+      calc(-50% + var(--metaball-x) * var(--orbit-scale)),
+      calc(-50% + var(--metaball-y) * var(--orbit-scale))
+    )
     scale(var(--metaball-child-scale));
   transition:
     width 0.45s ease,
@@ -289,16 +293,16 @@
 }
 
 .metaball-type {
-  --type-ball-x: 330px;
-  --type-ball-y: 73px;
-  --type-ball-radius: 144px;
+  --type-ball-x: calc(330px * var(--orbit-scale));
+  --type-ball-y: calc(73px * var(--orbit-scale));
+  --type-ball-radius: calc(144px * var(--orbit-scale));
   position: absolute;
   left: 50%;
   top: 50%;
   z-index: 3;
   display: block;
-  width: 660px;
-  min-height: 144px;
+  width: calc(660px * var(--orbit-scale));
+  min-height: calc(144px * var(--orbit-scale));
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
@@ -334,10 +338,22 @@
   text-shadow: none;
   -webkit-mask-image:
     radial-gradient(circle var(--type-ball-radius) at var(--type-ball-x) var(--type-ball-y), #000 99%, transparent 100%),
-    radial-gradient(circle var(--metaball-child-mask-radius) at var(--metaball-child-mask-x) var(--metaball-child-mask-y), #000 99%, transparent 100%);
+    radial-gradient(
+      circle calc(var(--metaball-child-mask-radius) * var(--orbit-scale)) at
+        calc(var(--metaball-child-mask-x) * var(--orbit-scale))
+        calc(var(--metaball-child-mask-y) * var(--orbit-scale)),
+      #000 99%,
+      transparent 100%
+    );
   mask-image:
     radial-gradient(circle var(--type-ball-radius) at var(--type-ball-x) var(--type-ball-y), #000 99%, transparent 100%),
-    radial-gradient(circle var(--metaball-child-mask-radius) at var(--metaball-child-mask-x) var(--metaball-child-mask-y), #000 99%, transparent 100%);
+    radial-gradient(
+      circle calc(var(--metaball-child-mask-radius) * var(--orbit-scale)) at
+        calc(var(--metaball-child-mask-x) * var(--orbit-scale))
+        calc(var(--metaball-child-mask-y) * var(--orbit-scale)),
+      #000 99%,
+      transparent 100%
+    );
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
 }
@@ -351,17 +367,17 @@
   position: absolute;
   left: 50%;
   width: max-content;
-  font-size: 3.72rem;
+  font-size: calc(3.72rem * var(--orbit-scale));
   white-space: nowrap;
 }
 
 .metaball-core b:first-child {
-  top: 22px;
+  top: calc(22px * var(--orbit-scale));
   transform: translateX(-50%);
 }
 
 .metaball-core b:last-child {
-  top: 76px;
+  top: calc(76px * var(--orbit-scale));
   transform: translateX(-50%);
 }
 
