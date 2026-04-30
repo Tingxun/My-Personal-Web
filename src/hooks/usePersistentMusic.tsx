@@ -64,6 +64,21 @@ export function usePersistentMusic(localTracks: MusicTrack[]): MusicController {
   const [progress, setProgress] = useState(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const audioGraphRef = useRef<AudioGraph | null>(null)
+  const shouldResumeRef = useRef(false)
+
+  const playableTracks = tracks.filter((track) => Boolean(track.audioUrl))
+
+  const moveTrack = (direction: 1 | -1) => {
+    if (!playableTracks.length) return
+
+    shouldResumeRef.current = isPlaying
+    setActiveTrack((current) => {
+      const currentIndex = playableTracks.findIndex((track) => track.id === current.id)
+      const safeIndex = currentIndex === -1 ? 0 : currentIndex
+      const nextIndex = (safeIndex + direction + playableTracks.length) % playableTracks.length
+      return playableTracks[nextIndex]
+    })
+  }
 
   useEffect(() => {
     setActiveTrack((current) => tracks.find((track) => track.id === current.id) || tracks[0])
@@ -88,7 +103,20 @@ export function usePersistentMusic(localTracks: MusicTrack[]): MusicController {
     audio.volume = volume
     setIsPlaying(false)
     setProgress(0)
-  }, [activeTrack])
+
+    if (shouldResumeRef.current) {
+      shouldResumeRef.current = false
+      const resumePlayback = async () => {
+        try {
+          await audio.play()
+          setIsPlaying(true)
+        } catch {
+          setIsPlaying(false)
+        }
+      }
+      void resumePlayback()
+    }
+  }, [activeTrack, volume])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -103,8 +131,9 @@ export function usePersistentMusic(localTracks: MusicTrack[]): MusicController {
     }
 
     const syncEnd = () => {
-      setIsPlaying(false)
+      shouldResumeRef.current = true
       setProgress(0)
+      moveTrack(1)
     }
 
     audio.addEventListener('timeupdate', syncProgress)
@@ -115,7 +144,7 @@ export function usePersistentMusic(localTracks: MusicTrack[]): MusicController {
       audio.removeEventListener('loadedmetadata', syncProgress)
       audio.removeEventListener('ended', syncEnd)
     }
-  }, [])
+  }, [moveTrack])
 
   const togglePlayback = async () => {
     const audio = audioRef.current
@@ -161,6 +190,8 @@ export function usePersistentMusic(localTracks: MusicTrack[]): MusicController {
     progress,
     setVolume,
     setActiveTrack,
+    previousTrack: () => moveTrack(-1),
+    nextTrack: () => moveTrack(1),
     togglePlayback,
     audioGraphRef,
     audioElement: <audio ref={audioRef} src={activeTrack.audioUrl} />,

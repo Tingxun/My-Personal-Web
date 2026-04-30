@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Camera, X } from 'lucide-react'
 import type { PhotoItem } from '../data'
-import { PHOTO_INITIAL_COUNT, PHOTO_LOAD_STEP, sectionMotion } from '../constants'
+import { PHOTO_INITIAL_COUNT, PHOTO_LOAD_STEP, PHOTO_MAX_LOAD_COUNT, sectionMotion } from '../constants'
 import { SectionHeading } from '../components/SectionHeading'
 
 export function PhotoGallery({ photos }: { photos: PhotoItem[] }) {
@@ -16,15 +16,17 @@ export function PhotoGallery({ photos }: { photos: PhotoItem[] }) {
     () => (category === '全部' ? photos : photos.filter((item) => item.category === category)),
     [category, photos],
   )
-  const loadedPhotos = visiblePhotos.slice(0, loadedCount)
-  const loadPercent = visiblePhotos.length ? Math.min(1, loadedCount / visiblePhotos.length) : 1
+  const loadablePhotos = useMemo(() => visiblePhotos.slice(0, PHOTO_MAX_LOAD_COUNT), [visiblePhotos])
+  const maxLoadCount = loadablePhotos.length
+  const loadedPhotos = loadablePhotos.slice(0, loadedCount)
+  const loadPercent = maxLoadCount ? Math.min(1, loadedCount / maxLoadCount) : 1
 
   const loadToCount = useCallback(
     (count: number) => {
-      const nextCount = Math.min(visiblePhotos.length, Math.max(PHOTO_INITIAL_COUNT, count))
+      const nextCount = Math.min(maxLoadCount, Math.max(Math.min(PHOTO_INITIAL_COUNT, maxLoadCount), count))
       startTransition(() => setLoadedCount(nextCount))
     },
-    [visiblePhotos.length],
+    [maxLoadCount],
   )
 
   const loadNextBatch = useCallback(() => {
@@ -38,12 +40,12 @@ export function PhotoGallery({ photos }: { photos: PhotoItem[] }) {
       ? (clientX - rect.left - 72) / Math.max(1, rect.width - 94)
       : 1 - (clientY - rect.top - 48) / Math.max(1, rect.height - 70)
     const percent = Math.min(1, Math.max(0, rawPercent))
-    loadToCount(Math.ceil(visiblePhotos.length * percent))
+    loadToCount(Math.ceil(maxLoadCount * percent))
   }
 
   useEffect(() => {
-    setLoadedCount(Math.min(PHOTO_INITIAL_COUNT, visiblePhotos.length))
-  }, [visiblePhotos.length])
+    setLoadedCount(Math.min(PHOTO_INITIAL_COUNT, maxLoadCount))
+  }, [maxLoadCount])
 
   useEffect(() => {
     if (!selectedPhoto) return
@@ -85,7 +87,7 @@ export function PhotoGallery({ photos }: { photos: PhotoItem[] }) {
       </div>
       <div className="photo-progress">
         <span>
-          已加载 {Math.min(loadedCount, visiblePhotos.length)} / {visiblePhotos.length}
+          已加载 {Math.min(loadedCount, maxLoadCount)} / {maxLoadCount}
         </span>
         <i style={{ transform: `scaleX(${loadPercent})` }} />
       </div>
@@ -124,9 +126,9 @@ export function PhotoGallery({ photos }: { photos: PhotoItem[] }) {
           className="photo-load-rail"
           role="slider"
           aria-label="图片加载进度"
-          aria-valuemin={Math.min(PHOTO_INITIAL_COUNT, visiblePhotos.length)}
-          aria-valuemax={visiblePhotos.length}
-          aria-valuenow={Math.min(loadedCount, visiblePhotos.length)}
+          aria-valuemin={Math.min(PHOTO_INITIAL_COUNT, maxLoadCount)}
+          aria-valuemax={maxLoadCount}
+          aria-valuenow={Math.min(loadedCount, maxLoadCount)}
           tabIndex={0}
           style={{ '--loaded-progress': loadPercent } as React.CSSProperties}
           onPointerDown={(event) => {
@@ -141,7 +143,7 @@ export function PhotoGallery({ photos }: { photos: PhotoItem[] }) {
           onKeyDown={(event) => {
             if (event.key === 'ArrowDown' || event.key === 'PageDown') loadNextBatch()
             if (event.key === 'ArrowUp' || event.key === 'PageUp') loadToCount(loadedCount - PHOTO_LOAD_STEP)
-            if (event.key === 'End') loadToCount(visiblePhotos.length)
+            if (event.key === 'End') loadToCount(maxLoadCount)
             if (event.key === 'Home') loadToCount(PHOTO_INITIAL_COUNT)
           }}
         >
@@ -154,7 +156,7 @@ export function PhotoGallery({ photos }: { photos: PhotoItem[] }) {
         <span>
           {isPending
             ? 'Loading...'
-            : loadedCount < visiblePhotos.length
+            : loadedCount < maxLoadCount
               ? 'Drag the rail to reveal more'
               : 'Archive loaded'}
         </span>

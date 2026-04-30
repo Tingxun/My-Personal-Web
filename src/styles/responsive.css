@@ -123,6 +123,27 @@
     grid-template-columns: 1fr;
   }
 
+  .wlop-entry-card {
+    min-height: 150px;
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .wlop-art-toolbar {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
+
+  .wlop-art-toolbar span {
+    display: none;
+  }
+
+  .wlop-art-piece span {
+    min-height: 28px;
+    font-size: 0.66rem;
+  }
+
   .photo-load-rail {
     position: relative;
     top: auto;
@@ -226,7 +247,7 @@
     bottom: 12px;
     left: 12px;
     width: auto;
-    grid-template-columns: 48px minmax(0, 1fr) 40px;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
   }
 
   .dock-cover {

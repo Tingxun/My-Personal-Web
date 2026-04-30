@@ -9,6 +9,7 @@ export const pages: Array<{ id: PageId; label: string; hash: string }> = [
 
 export const PHOTO_INITIAL_COUNT = 5
 export const PHOTO_LOAD_STEP = 6
+export const PHOTO_MAX_LOAD_COUNT = 40
 
 export const sectionMotion = {
   initial: false,

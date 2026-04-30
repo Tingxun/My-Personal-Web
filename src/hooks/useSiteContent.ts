@@ -14,7 +14,7 @@ export function useSiteContent() {
     apiGet<SiteContent>('/api/content', controller.signal)
       .then((payload) => {
         setContent({
-          photos: payload.photos?.length ? payload.photos : fallbackContent.photos,
+          photos: fallbackContent.photos,
           games: payload.games?.length ? payload.games : fallbackContent.games,
           projects: payload.projects?.length ? payload.projects : fallbackContent.projects,
           localTracks: payload.localTracks?.length ? payload.localTracks : fallbackContent.localTracks,

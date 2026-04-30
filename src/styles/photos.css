@@ -204,6 +204,287 @@
   opacity: 0.68;
 }
 
+.wlop-entry-section {
+  padding-top: 28px;
+}
+
+.wlop-entry-card {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: 170px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(109, 232, 255, 0.28);
+  background:
+    linear-gradient(115deg, rgba(7, 9, 15, 0.88), rgba(16, 32, 49, 0.78)),
+    radial-gradient(circle at 74% 18%, rgba(157, 255, 119, 0.2), transparent 34%),
+    radial-gradient(circle at 14% 70%, rgba(109, 232, 255, 0.16), transparent 30%);
+  clip-path: polygon(22px 0, 100% 0, 100% calc(100% - 30px), calc(100% - 34px) 100%, 0 100%, 0 22px);
+  padding: 24px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+.wlop-entry-card::before {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 34px 34px;
+  content: "";
+  opacity: 0.46;
+  pointer-events: none;
+}
+
+.wlop-entry-card::after {
+  position: absolute;
+  right: -7%;
+  bottom: -46%;
+  width: min(520px, 62vw);
+  aspect-ratio: 1;
+  border: 1px solid rgba(109, 232, 255, 0.24);
+  background: radial-gradient(circle, rgba(109, 232, 255, 0.22), transparent 68%);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  content: "";
+  transform: rotate(18deg);
+  transition: transform 0.38s ease;
+}
+
+.wlop-entry-card:hover::after {
+  transform: rotate(26deg) scale(1.06);
+}
+
+.wlop-entry-card span {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+}
+
+.wlop-entry-card strong {
+  font-size: clamp(1.55rem, 3vw, 3rem);
+  line-height: 1;
+}
+
+.wlop-entry-card small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.wlop-entry-card > svg {
+  position: relative;
+  z-index: 1;
+  color: var(--green);
+}
+
+.wlop-art-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    radial-gradient(circle at 28% 16%, rgba(109, 232, 255, 0.2), transparent 36%),
+    radial-gradient(circle at 80% 24%, rgba(157, 255, 119, 0.13), transparent 30%),
+    #05070d;
+  background-size: 42px 42px, 42px 42px, auto, auto, auto;
+  user-select: none;
+}
+
+.wlop-art-toolbar {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  left: 18px;
+  z-index: 3;
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid var(--line);
+  background: rgba(7, 9, 15, 0.78);
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  padding: 10px 14px;
+  backdrop-filter: blur(18px);
+}
+
+.wlop-art-toolbar > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.wlop-art-toolbar strong {
+  font-size: 1rem;
+}
+
+.wlop-art-toolbar span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.wlop-art-close,
+.wlop-art-preview button {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.08);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.wlop-year-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.wlop-year-tabs button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  padding: 7px 13px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.wlop-year-tabs button.active {
+  border-color: rgba(157, 255, 119, 0.56);
+  background: rgba(157, 255, 119, 0.14);
+  color: var(--green);
+}
+
+.wlop-art-stage {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  cursor: grab;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(109, 232, 255, 0.7) rgba(255, 255, 255, 0.08);
+  scrollbar-width: thin;
+  touch-action: none;
+  user-select: none;
+}
+
+.wlop-art-stage.dragging {
+  cursor: grabbing;
+}
+
+.wlop-art-plane {
+  position: relative;
+  user-select: none;
+}
+
+.wlop-art-segment {
+  position: absolute;
+  column-count: var(--wlop-column-count, 4);
+  column-gap: var(--wlop-piece-gap, 28px);
+  padding: 0;
+  user-select: none;
+}
+
+.wlop-art-piece {
+  position: relative;
+  display: grid;
+  width: 100%;
+  grid-template-rows: auto 42px;
+  overflow: hidden;
+  break-inside: avoid;
+  margin: 0 0 var(--wlop-piece-gap, 28px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: var(--panel-solid);
+  padding: 0;
+  color: var(--text);
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.36);
+  cursor: zoom-in;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.wlop-art-piece:hover {
+  border-color: rgba(157, 255, 119, 0.56);
+}
+
+.wlop-art-piece img {
+  width: 100%;
+  height: auto;
+  background: rgba(0, 0, 0, 0.28);
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.wlop-art-piece span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(7, 9, 15, 0.72);
+  padding: 0 10px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  user-select: none;
+  white-space: nowrap;
+  backdrop-filter: blur(12px);
+}
+
+.wlop-art-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.84);
+  padding: 76px 18px 32px;
+}
+
+.wlop-art-preview button {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+}
+
+.wlop-art-preview img {
+  max-height: min(72dvh, 760px);
+  width: min(100%, 1180px);
+  border: 1px solid var(--line);
+  clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 28px), calc(100% - 28px) 100%, 0 100%, 0 20px);
+  object-fit: contain;
+  box-shadow: var(--shadow);
+}
+
+.wlop-art-preview div {
+  display: grid;
+  width: min(100%, 1180px);
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.wlop-art-preview span {
+  color: var(--muted);
+}
+
 .lightbox {
   position: fixed;
   inset: 0;

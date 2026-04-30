@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion'
-import { Pause, Play, Volume2, VolumeX } from 'lucide-react'
+import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react'
 import type { MusicController, PageId } from '../types'
 
 export function PersistentMusicDock({ music, goToPage }: { music: MusicController; goToPage: (page: PageId) => void }) {
-  const { activeTrack, isPlaying, volume, progress, setVolume, togglePlayback } = music
+  const { activeTrack, isPlaying, tracks, volume, progress, setVolume, previousTrack, nextTrack, togglePlayback } = music
+  const canSkip = tracks.some((track) => track.audioUrl)
 
   return (
     <motion.aside
@@ -21,9 +22,17 @@ export function PersistentMusicDock({ music, goToPage }: { music: MusicControlle
         <small>{isPlaying ? 'Now playing' : 'Audio ready'}</small>
         <strong>{activeTrack.title}</strong>
       </div>
-      <button className="dock-play" type="button" onClick={togglePlayback} disabled={!activeTrack.audioUrl} aria-label="播放或暂停">
-        {isPlaying ? <Pause size={18} /> : <Play size={18} />}
-      </button>
+      <div className="dock-actions">
+        <button type="button" onClick={previousTrack} disabled={!canSkip} aria-label="上一首">
+          <SkipBack size={15} />
+        </button>
+        <button className="dock-play" type="button" onClick={togglePlayback} disabled={!activeTrack.audioUrl} aria-label="播放或暂停">
+          {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+        </button>
+        <button type="button" onClick={nextTrack} disabled={!canSkip} aria-label="下一首">
+          <SkipForward size={15} />
+        </button>
+      </div>
       <div className="dock-volume">
         {volume > 0 ? <Volume2 size={16} /> : <VolumeX size={16} />}
         <input
