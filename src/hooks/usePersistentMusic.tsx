@@ -2,13 +2,39 @@ import { useEffect, useRef, useState } from 'react'
 import { localTracks as fallbackTracks, type MusicTrack } from '../data'
 import type { AudioGraph, MusicController } from '../types'
 
-function useMusicTracks(localTracks: MusicTrack[]) {
-  const [tracks, setTracks] = useState<MusicTrack[]>(localTracks.length ? localTracks : fallbackTracks)
+const legacyMissingCoverPattern = /^\/assets\/optimized\/photos\/wlop-\d+-thumb\.webp$/
+
+const hashText = (value: string) => {
+  let hash = 2166136261
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+
+  return hash >>> 0
+}
+
+const pickFallbackCover = (trackId: string, coverFallbacks: string[]) => {
+  if (!coverFallbacks.length) return '/assets/optimized/wlop/2022/wlop-2022-1-dressingroom2-4k-91f9a3af-thumb.webp'
+  return coverFallbacks[hashText(trackId) % coverFallbacks.length]
+}
+
+const needsFallbackCover = (cover: string) => !cover || legacyMissingCoverPattern.test(cover)
+
+const withFallbackCovers = (tracks: MusicTrack[], coverFallbacks: string[]) =>
+  tracks.map((track) => ({
+    ...track,
+    cover: needsFallbackCover(track.cover) ? pickFallbackCover(track.id, coverFallbacks) : track.cover,
+  }))
+
+function useMusicTracks(localTracks: MusicTrack[], coverFallbacks: string[]) {
+  const [tracks, setTracks] = useState<MusicTrack[]>(withFallbackCovers(localTracks.length ? localTracks : fallbackTracks, coverFallbacks))
   const [sourceNote, setSourceNote] = useState('Local fallback ready')
 
   useEffect(() => {
-    setTracks(localTracks.length ? localTracks : fallbackTracks)
-  }, [localTracks])
+    setTracks(withFallbackCovers(localTracks.length ? localTracks : fallbackTracks, coverFallbacks))
+  }, [coverFallbacks, localTracks])
 
   useEffect(() => {
     const apiBase = import.meta.env.VITE_NETEASE_API_BASE as string | undefined
@@ -37,27 +63,27 @@ function useMusicTracks(localTracks: MusicTrack[]) {
           id: `netease-${track.id}`,
           title: track.name,
           artist: track.ar?.map((artist) => artist.name).join(' / ') || 'Unknown Artist',
-          cover: track.al?.picUrl || '/assets/optimized/photos/wlop-02-thumb.webp',
+          cover: track.al?.picUrl || pickFallbackCover(`netease-${track.id}`, coverFallbacks),
           audioUrl: '',
           source: 'netease' as const,
           externalUrl: `https://music.163.com/#/song?id=${track.id}`,
         }))
 
         if (imported?.length) {
-          setTracks([...imported, ...(localTracks.length ? localTracks : fallbackTracks)])
+          setTracks([...imported, ...withFallbackCovers(localTracks.length ? localTracks : fallbackTracks, coverFallbacks)])
           setSourceNote('Netease playlist loaded, playback depends on external availability')
         }
       })
       .catch(() => setSourceNote('Music API unavailable, using local fallback'))
 
     return () => controller.abort()
-  }, [localTracks])
+  }, [coverFallbacks, localTracks])
 
   return { tracks, sourceNote }
 }
 
-export function usePersistentMusic(localTracks: MusicTrack[]): MusicController {
-  const { tracks, sourceNote } = useMusicTracks(localTracks)
+export function usePersistentMusic(localTracks: MusicTrack[], coverFallbacks: string[] = []): MusicController {
+  const { tracks, sourceNote } = useMusicTracks(localTracks, coverFallbacks)
   const [activeTrack, setActiveTrack] = useState(tracks[0])
   const [isPlaying, setIsPlaying] = useState(false)
   const [volume, setVolume] = useState(0.72)

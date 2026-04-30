@@ -303,7 +303,7 @@
   top: 18px;
   right: 18px;
   left: 18px;
-  z-index: 3;
+  z-index: 60;
   display: flex;
   min-height: 58px;
   align-items: center;
@@ -370,7 +370,14 @@
   color: var(--green);
 }
 
+.wlop-year-tabs button:disabled {
+  cursor: wait;
+  opacity: 0.74;
+}
+
 .wlop-art-stage {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   overflow: auto;
@@ -389,6 +396,63 @@
 .wlop-art-plane {
   position: relative;
   user-select: none;
+}
+
+.wlop-year-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(rgba(5, 7, 13, 0.66), rgba(5, 7, 13, 0.72)),
+    radial-gradient(circle at 50% 42%, rgba(109, 232, 255, 0.16), transparent 34%);
+  padding: 108px 18px 38px;
+  pointer-events: auto;
+}
+
+.wlop-year-loading > div {
+  position: relative;
+  display: grid;
+  min-width: min(320px, calc(100vw - 36px));
+  justify-items: center;
+  gap: 8px;
+  border: 1px solid rgba(109, 232, 255, 0.34);
+  background: rgba(7, 9, 15, 0.82);
+  clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
+  padding: 28px 30px 26px;
+  box-shadow: 0 28px 88px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(18px);
+}
+
+.wlop-year-loading i {
+  width: 58px;
+  aspect-ratio: 1;
+  border: 2px solid rgba(109, 232, 255, 0.18);
+  border-top-color: var(--cyan);
+  border-right-color: var(--green);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  animation: wlop-year-spin 0.9s linear infinite;
+}
+
+.wlop-year-loading strong {
+  color: var(--text);
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.wlop-year-loading span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+@keyframes wlop-year-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .wlop-art-segment {

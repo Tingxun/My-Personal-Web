@@ -28,11 +28,34 @@ const hashText = (value: string) => {
 const samplePhotos = (photos: PhotoItem[], seed: number) =>
   [...photos].sort((left, right) => hashText(`${seed}:${left.id}`) - hashText(`${seed}:${right.id}`)).slice(0, SAMPLE_SIZE)
 
+const preloadPhoto = (src: string) =>
+  new Promise<void>((resolve) => {
+    const image = new Image()
+    image.onload = () => resolve()
+    image.onerror = () => resolve()
+    image.src = src
+  })
+
+const waitForImage = (image: HTMLImageElement) => {
+  if (image.complete) return Promise.resolve()
+
+  return new Promise<void>((resolve) => {
+    const finish = () => resolve()
+    image.addEventListener('load', finish, { once: true })
+    image.addEventListener('error', finish, { once: true })
+  })
+}
+
+const wait = (duration: number) => new Promise((resolve) => window.setTimeout(resolve, duration))
+const waitForFrame = () => new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
+
 export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
   const [isPreparing, setIsPreparing] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const years = useMemo(() => [...new Set(photos.map((photo) => photo.date))].sort(), [photos])
   const [activeYear, setActiveYear] = useState(() => years[0] || '2022')
+  const [pendingYear, setPendingYear] = useState<string | null>(null)
+  const [isYearSwitching, setIsYearSwitching] = useState(false)
   const [sampleSeed, setSampleSeed] = useState(() => Date.now())
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoItem | null>(null)
   const [segmentHeight, setSegmentHeight] = useState(DEFAULT_SEGMENT_HEIGHT)
@@ -47,7 +70,8 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
     startedAt: number
     photo: PhotoItem | null
   } | null>(null)
-  const openTimer = useRef<number | null>(null)
+  const openToken = useRef(0)
+  const yearSwitchToken = useRef(0)
   const activePhotos = useMemo(() => photos.filter((photo) => photo.date === activeYear), [activeYear, photos])
   const tiles = useMemo(() => samplePhotos(activePhotos, sampleSeed), [activePhotos, sampleSeed])
   const segmentPitchY = segmentHeight + PIECE_GAP
@@ -67,7 +91,7 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
 
   useEffect(() => {
     return () => {
-      if (openTimer.current) window.clearTimeout(openTimer.current)
+      openToken.current += 1
     }
   }, [])
 
@@ -78,7 +102,6 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
 
   useEffect(() => {
     setSelectedPhoto(null)
-    setSampleSeed(Date.now())
     setSegmentHeight(DEFAULT_SEGMENT_HEIGHT)
     requestAnimationFrame(() => {
       const stage = stageRef.current
@@ -142,14 +165,76 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
     if (stage.scrollTop > segmentPitchY * 1.58) stage.scrollTop -= segmentPitchY
   }
 
-  const openCollection = () => {
+  const openCollection = async () => {
+    if (isPreparing) return
+
+    const token = openToken.current + 1
+    const nextSeed = Date.now()
+    const nextTiles = samplePhotos(activePhotos, nextSeed)
+
+    openToken.current = token
     setSelectedPhoto(null)
-    setSampleSeed(Date.now())
+    setSampleSeed(nextSeed)
     setIsPreparing(true)
-    openTimer.current = window.setTimeout(() => {
-      setIsOpen(true)
-      setIsPreparing(false)
-    }, 520)
+
+    await Promise.all([Promise.all(nextTiles.map((tile) => preloadPhoto(tile.src))), wait(520)])
+
+    if (openToken.current !== token) return
+
+    setIsOpen(true)
+    setIsPreparing(false)
+  }
+
+  const waitForCenterSegmentImages = async (expectedTiles: PhotoItem[]) => {
+    await waitForFrame()
+    await waitForFrame()
+
+    const segment = centerSegmentRef.current
+    if (!segment) return
+
+    const expectedIds = new Set(expectedTiles.map((tile) => tile.id))
+    const images = Array.from(segment.querySelectorAll<HTMLImageElement>('.wlop-art-piece img')).filter((image) => {
+      const piece = image.closest<HTMLElement>('.wlop-art-piece')
+      return piece?.dataset.photoId ? expectedIds.has(piece.dataset.photoId) : false
+    })
+
+    await Promise.race([Promise.all(images.map(waitForImage)), wait(8000)])
+  }
+
+  const switchYear = async (year: string) => {
+    if (year === activeYear || isYearSwitching) return
+
+    const token = yearSwitchToken.current + 1
+    const nextSeed = Date.now()
+    const nextPhotos = photos.filter((photo) => photo.date === year)
+    const nextTiles = samplePhotos(nextPhotos, nextSeed)
+
+    yearSwitchToken.current = token
+    setPendingYear(year)
+    setIsYearSwitching(true)
+    setSelectedPhoto(null)
+
+    await Promise.all([Promise.all(nextTiles.map((tile) => preloadPhoto(tile.src))), wait(520)])
+
+    if (yearSwitchToken.current !== token) return
+
+    setActiveYear(year)
+    setSampleSeed(nextSeed)
+    setSegmentHeight(DEFAULT_SEGMENT_HEIGHT)
+
+    requestAnimationFrame(() => {
+      const stage = stageRef.current
+      if (!stage) return
+      stage.scrollLeft = SEGMENT_PITCH_X
+      stage.scrollTop = DEFAULT_SEGMENT_HEIGHT + PIECE_GAP
+    })
+
+    await waitForCenterSegmentImages(nextTiles)
+    await wait(180)
+
+    if (yearSwitchToken.current !== token) return
+    setIsYearSwitching(false)
+    setPendingYear(null)
   }
 
   return (
@@ -188,8 +273,9 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
                     <button
                       key={year}
                       type="button"
-                      className={year === activeYear ? 'active' : ''}
-                      onClick={() => setActiveYear(year)}
+                      className={year === (pendingYear || activeYear) ? 'active' : ''}
+                      disabled={isYearSwitching}
+                      onClick={() => void switchYear(year)}
                     >
                       {year}
                     </button>
@@ -272,7 +358,13 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
                           onClick={(event) => event.preventDefault()}
                           whileHover={{ scale: 1.025, zIndex: 4 }}
                         >
-                          <img src={tile.src} alt={tile.title} loading="lazy" draggable={false} onLoad={measureSegment} />
+                          <img
+                            src={tile.src}
+                            alt={tile.title}
+                            loading={isYearSwitching ? 'eager' : 'lazy'}
+                            draggable={false}
+                            onLoad={measureSegment}
+                          />
                           <span>
                             <Maximize2 size={14} />
                             {tile.title}
@@ -282,6 +374,28 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
                     </div>
                   ))}
                 </div>
+                <AnimatePresence>
+                  {isYearSwitching ? (
+                    <motion.div
+                      className="wlop-year-loading"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      <motion.div
+                        initial={{ opacity: 0, y: 18, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -12, scale: 0.98 }}
+                        transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <i />
+                        <strong>{pendingYear}</strong>
+                        <span>Loading WLOP collection</span>
+                      </motion.div>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
               </div>
               <AnimatePresence>
                 {selectedPhoto ? (

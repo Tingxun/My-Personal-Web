@@ -1,6 +1,6 @@
 import { AnimatePresence } from 'framer-motion'
 import { Grid3X3 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { DistortionFooter } from './components/DistortionFooter'
 import { GeometryField } from './components/GeometryField'
 import { PageLoader } from './components/PageLoader'
@@ -19,7 +19,11 @@ function App() {
   const [activePage, setActivePage] = useState<PageId>(() => getPageFromHash())
   const [loadingPage, setLoadingPage] = useState<PageId | null>(null)
   const { content } = useSiteContent()
-  const music = usePersistentMusic(content.localTracks)
+  const musicCoverFallbacks = useMemo(
+    () => content.photos.filter((photo) => photo.category.startsWith('WLOP')).map((photo) => photo.thumb),
+    [content.photos],
+  )
+  const music = usePersistentMusic(content.localTracks, musicCoverFallbacks)
 
   const goToPage = (page: PageId) => {
     if (page === activePage) return
