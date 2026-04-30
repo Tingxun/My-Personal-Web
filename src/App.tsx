@@ -7,6 +7,7 @@ import { PageLoader } from './components/PageLoader'
 import { pages } from './constants'
 import { PersistentMusicDock } from './features/PersistentMusicDock'
 import { usePersistentMusic } from './hooks/usePersistentMusic'
+import { useSiteContent } from './hooks/useSiteContent'
 import { GuestbookPage } from './pages/GuestbookPage'
 import { HomePage } from './pages/HomePage'
 import { LabPage } from './pages/LabPage'
@@ -17,7 +18,8 @@ import { getPageFromHash } from './utils/routes'
 function App() {
   const [activePage, setActivePage] = useState<PageId>(() => getPageFromHash())
   const [loadingPage, setLoadingPage] = useState<PageId | null>(null)
-  const music = usePersistentMusic()
+  const { content } = useSiteContent()
+  const music = usePersistentMusic(content.localTracks)
 
   const goToPage = (page: PageId) => {
     if (page === activePage) return
@@ -83,8 +85,8 @@ function App() {
       <main id="top">
         <AnimatePresence mode="wait">
           {activePage === 'home' ? <HomePage goToPage={goToPage} /> : null}
-          {activePage === 'memories' ? <MemoriesPage music={music} /> : null}
-          {activePage === 'lab' ? <LabPage /> : null}
+          {activePage === 'memories' ? <MemoriesPage music={music} photos={content.photos} games={content.games} /> : null}
+          {activePage === 'lab' ? <LabPage projects={content.projects} skills={content.skills} /> : null}
           {activePage === 'guestbook' ? <GuestbookPage /> : null}
         </AnimatePresence>
 

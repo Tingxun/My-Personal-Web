@@ -1,20 +1,20 @@
-import { useCallback, useEffect, useMemo, useState, useTransition } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Camera, X } from 'lucide-react'
-import { photos, type PhotoItem } from '../data'
+import type { PhotoItem } from '../data'
 import { PHOTO_INITIAL_COUNT, PHOTO_LOAD_STEP, sectionMotion } from '../constants'
 import { SectionHeading } from '../components/SectionHeading'
 
-export function PhotoGallery() {
-  const categories = useMemo(() => ['全部', ...Array.from(new Set(photos.map((item) => item.category)))], [])
+export function PhotoGallery({ photos }: { photos: PhotoItem[] }) {
+  const categories = useMemo(() => ['全部', ...Array.from(new Set(photos.map((item) => item.category)))], [photos])
   const [category, setCategory] = useState('全部')
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoItem | null>(null)
   const [loadedCount, setLoadedCount] = useState(PHOTO_INITIAL_COUNT)
   const [isPending, startTransition] = useTransition()
   const visiblePhotos = useMemo(
     () => (category === '全部' ? photos : photos.filter((item) => item.category === category)),
-    [category],
+    [category, photos],
   )
   const loadedPhotos = visiblePhotos.slice(0, loadedCount)
   const loadPercent = visiblePhotos.length ? Math.min(1, loadedCount / visiblePhotos.length) : 1
@@ -66,7 +66,7 @@ export function PhotoGallery() {
       <SectionHeading
         eyebrow="Visual Archive"
         title="照片几何墙"
-        text="把杂乱照片先按地点与主题精选入库，首版用轻量缩略图铺开，点击进入沉浸预览。"
+        text="把照片按地点与主题整理入库，首屏用轻量缩略图铺开，点击进入沉浸预览。"
         icon={<Camera size={16} />}
       />
       <div className="filter-bar">

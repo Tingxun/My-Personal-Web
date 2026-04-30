@@ -1,15 +1,21 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Gamepad2 } from 'lucide-react'
-import { games } from '../data'
+import type { GameItem } from '../data'
 import { sectionMotion } from '../constants'
 import { SectionHeading } from '../components/SectionHeading'
 
-export function GamesSection() {
+export function GamesSection({ games }: { games: GameItem[] }) {
   const [activeGame, setActiveGame] = useState(games[0])
   const [screenshotIndex, setScreenshotIndex] = useState(0)
 
+  useEffect(() => {
+    setActiveGame(games[0])
+  }, [games])
+
   useEffect(() => setScreenshotIndex(0), [activeGame])
+
+  if (!activeGame) return null
 
   return (
     <motion.section id="games" className="section" {...sectionMotion}>

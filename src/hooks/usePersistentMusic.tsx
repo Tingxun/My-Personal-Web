@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import { localTracks, type MusicTrack } from '../data'
+import { localTracks as fallbackTracks, type MusicTrack } from '../data'
 import type { AudioGraph, MusicController } from '../types'
 
-function useMusicTracks() {
-  const [tracks, setTracks] = useState<MusicTrack[]>(localTracks)
+function useMusicTracks(localTracks: MusicTrack[]) {
+  const [tracks, setTracks] = useState<MusicTrack[]>(localTracks.length ? localTracks : fallbackTracks)
   const [sourceNote, setSourceNote] = useState('Local fallback ready')
+
+  useEffect(() => {
+    setTracks(localTracks.length ? localTracks : fallbackTracks)
+  }, [localTracks])
 
   useEffect(() => {
     const apiBase = import.meta.env.VITE_NETEASE_API_BASE as string | undefined
@@ -40,20 +44,20 @@ function useMusicTracks() {
         }))
 
         if (imported?.length) {
-          setTracks([...imported, ...localTracks])
+          setTracks([...imported, ...(localTracks.length ? localTracks : fallbackTracks)])
           setSourceNote('Netease playlist loaded, playback depends on external availability')
         }
       })
       .catch(() => setSourceNote('Music API unavailable, using local fallback'))
 
     return () => controller.abort()
-  }, [])
+  }, [localTracks])
 
   return { tracks, sourceNote }
 }
 
-export function usePersistentMusic(): MusicController {
-  const { tracks, sourceNote } = useMusicTracks()
+export function usePersistentMusic(localTracks: MusicTrack[]): MusicController {
+  const { tracks, sourceNote } = useMusicTracks(localTracks)
   const [activeTrack, setActiveTrack] = useState(tracks[0])
   const [isPlaying, setIsPlaying] = useState(false)
   const [volume, setVolume] = useState(0.72)

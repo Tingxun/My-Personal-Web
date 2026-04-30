@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion'
 import { Code2 } from 'lucide-react'
-import { projects, skills } from '../data'
+import type { ProjectItem, SkillItem } from '../data'
 import { sectionMotion } from '../constants'
 import { SectionHeading } from '../components/SectionHeading'
 
-export function CodeSection() {
+export function CodeSection({ projects, skills }: { projects: ProjectItem[]; skills: SkillItem[] }) {
   return (
     <motion.section id="code" className="section" {...sectionMotion}>
       <SectionHeading

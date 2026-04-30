@@ -37,6 +37,20 @@ export type ProjectItem = {
   featured: boolean
 }
 
+export type SkillItem = {
+  label: string
+  value: number
+  detail: string
+}
+
+export type SiteContent = {
+  photos: PhotoItem[]
+  games: GameItem[]
+  projects: ProjectItem[]
+  localTracks: MusicTrack[]
+  skills: SkillItem[]
+}
+
 const photo = (id: string, title: string, category: string, date: string, location: string): PhotoItem => ({
   id,
   title,
@@ -185,10 +199,18 @@ export const localTracks: MusicTrack[] = [
   },
 ]
 
-export const skills = [
+export const skills: SkillItem[] = [
   { label: 'Web Frontend', value: 86, detail: 'React / Vue / Vite / Canvas' },
   { label: 'Python & Data', value: 82, detail: 'Crawler / ML / Data analysis' },
   { label: 'Java Backend', value: 78, detail: 'Spring / OOP / Engineering' },
   { label: 'C/C++ Basis', value: 70, detail: 'Data structures / Algorithms' },
   { label: 'Creative Coding', value: 74, detail: 'Motion / Geometry / Visual systems' },
 ]
+
+export const fallbackContent: SiteContent = {
+  photos,
+  games,
+  projects,
+  localTracks,
+  skills,
+}

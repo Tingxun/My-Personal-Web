@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { MessageSquareText, Send, Sparkles, UserRound } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { pageMotion } from '../constants'
+import { apiGet, apiPost } from '../services/api'
 
 type GuestbookTone = 'idea' | 'like' | 'bug'
 
@@ -44,42 +45,77 @@ export function GuestbookPage() {
   const [message, setMessage] = useState('')
   const [tone, setTone] = useState<GuestbookTone>('idea')
   const [activeEntry, setActiveEntry] = useState(seedEntries[0].id)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(storageKey)
-      if (stored) setEntries(JSON.parse(stored) as GuestbookEntry[])
-    } catch {
-      setEntries(seedEntries)
-    }
+    const controller = new AbortController()
+
+    apiGet<GuestbookEntry[]>('/api/guestbook', controller.signal)
+      .then((payload) => {
+        if (!payload.length) return
+        setEntries(payload)
+        setActiveEntry(payload[0].id)
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        try {
+          const stored = window.localStorage.getItem(storageKey)
+          if (stored) setEntries(JSON.parse(stored) as GuestbookEntry[])
+        } catch {
+          setEntries(seedEntries)
+        }
+      })
+
+    return () => controller.abort()
   }, [])
 
   useEffect(() => {
-    window.localStorage.setItem(storageKey, JSON.stringify(entries))
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(entries))
+    } catch {
+      // localStorage is only a fallback cache for offline development.
+    }
   }, [entries])
 
   const activeTone = useMemo(() => toneOptions.find((item) => item.id === tone) || toneOptions[0], [tone])
   const messageLength = message.trim().length
   const canSubmit = messageLength >= 6
 
-  const submitEntry = () => {
-    if (!canSubmit) return
+  const submitEntry = async () => {
+    if (!canSubmit || isSubmitting) return
+    setIsSubmitting(true)
 
-    const nextEntry: GuestbookEntry = {
-      id: crypto.randomUUID(),
-      name: name.trim() || 'Anonymous',
-      message: message.trim(),
-      tone,
-      createdAt: new Intl.DateTimeFormat('en', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(
-        new Date(),
-      ),
+    try {
+      const nextEntry = await apiPost<GuestbookEntry>('/api/guestbook', {
+        name: name.trim() || 'Anonymous',
+        message: message.trim(),
+        tone,
+      })
+
+      setEntries((current) => [nextEntry, ...current].slice(0, 12))
+      setActiveEntry(nextEntry.id)
+      setName('')
+      setMessage('')
+      setTone('idea')
+    } catch {
+      const nextEntry: GuestbookEntry = {
+        id: crypto.randomUUID(),
+        name: name.trim() || 'Anonymous',
+        message: message.trim(),
+        tone,
+        createdAt: new Intl.DateTimeFormat('en', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(
+          new Date(),
+        ),
+      }
+
+      setEntries((current) => [nextEntry, ...current].slice(0, 12))
+      setActiveEntry(nextEntry.id)
+      setName('')
+      setMessage('')
+      setTone('idea')
+    } finally {
+      setIsSubmitting(false)
     }
-
-    setEntries((current) => [nextEntry, ...current].slice(0, 12))
-    setActiveEntry(nextEntry.id)
-    setName('')
-    setMessage('')
-    setTone('idea')
   }
 
   return (
@@ -146,7 +182,7 @@ export function GuestbookPage() {
               <p>{message.trim() || 'Your feedback will pulse here before it enters the wall.'}</p>
             </div>
 
-            <button className="guestbook-submit" type="submit" disabled={!canSubmit}>
+            <button className="guestbook-submit" type="submit" disabled={!canSubmit || isSubmitting}>
               Send signal
               <Send size={18} />
             </button>
