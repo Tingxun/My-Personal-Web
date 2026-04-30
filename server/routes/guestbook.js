@@ -36,8 +36,8 @@ guestbookRouter.post(
     const message = String(req.body?.message || '').trim().slice(0, 500)
     const tone = allowedTones.has(req.body?.tone) ? req.body.tone : 'idea'
 
-    if (message.length < 6) {
-      res.status(400).json({ error: 'Message must be at least 6 characters.' })
+    if (message.length < 1) {
+      res.status(400).json({ error: 'Message is required.' })
       return
     }
 

@@ -79,7 +79,7 @@ export function GuestbookPage() {
 
   const activeTone = useMemo(() => toneOptions.find((item) => item.id === tone) || toneOptions[0], [tone])
   const messageLength = message.trim().length
-  const canSubmit = messageLength >= 6
+  const canSubmit = messageLength > 0
 
   const submitEntry = async () => {
     if (!canSubmit || isSubmitting) return

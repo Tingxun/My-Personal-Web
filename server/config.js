@@ -28,3 +28,22 @@ export const config = {
     charset: 'utf8mb4',
   },
 }
+
+export function isAllowedCorsOrigin(origin) {
+  if (!origin) return true
+  if (config.corsOrigin.includes(origin)) return true
+
+  try {
+    const url = new URL(origin)
+    const isDevPort = url.port === '5173' || url.port === '4173'
+    const isLocalHost = url.hostname === 'localhost' || url.hostname === '127.0.0.1'
+    const isPrivateLan =
+      url.hostname.startsWith('10.') ||
+      url.hostname.startsWith('192.168.') ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(url.hostname)
+
+    return url.protocol === 'http:' && isDevPort && (isLocalHost || isPrivateLan)
+  } catch {
+    return false
+  }
+}

@@ -14,6 +14,16 @@ npm run dev:server
 curl http://localhost:4000/api/health
 ```
 
+LAN preview:
+
+```bash
+npm run dev:server
+npm run dev:lan
+```
+
+The API server prints the current LAN URLs on startup, such as `http://192.168.1.23:4000`.
+Users on the same WLAN should open the Vite URL printed by `npm run dev:lan`, usually `http://192.168.1.23:5173`.
+
 Useful endpoints:
 
 - `GET /api/content`
