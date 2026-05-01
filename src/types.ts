@@ -18,6 +18,7 @@ export type MusicController = {
   progress: number
   setVolume: (volume: number) => void
   setActiveTrack: (track: MusicTrack) => void
+  reorderTracks: (sourceTrackId: string, targetTrackId: string) => void
   previousTrack: () => void
   nextTrack: () => void
   togglePlayback: () => Promise<void>

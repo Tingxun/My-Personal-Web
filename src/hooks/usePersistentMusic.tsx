@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { localTracks as fallbackTracks, type MusicTrack } from '../data'
 import type { AudioGraph, MusicController } from '../types'
 
@@ -83,7 +83,8 @@ function useMusicTracks(localTracks: MusicTrack[], coverFallbacks: string[]) {
 }
 
 export function usePersistentMusic(localTracks: MusicTrack[], coverFallbacks: string[] = []): MusicController {
-  const { tracks, sourceNote } = useMusicTracks(localTracks, coverFallbacks)
+  const { tracks: loadedTracks, sourceNote } = useMusicTracks(localTracks, coverFallbacks)
+  const [tracks, setTracks] = useState<MusicTrack[]>(loadedTracks)
   const [activeTrack, setActiveTrack] = useState(tracks[0])
   const [isPlaying, setIsPlaying] = useState(false)
   const [volume, setVolume] = useState(0.72)
@@ -93,19 +94,50 @@ export function usePersistentMusic(localTracks: MusicTrack[], coverFallbacks: st
   const shouldResumeRef = useRef(false)
   const volumeRef = useRef(volume)
 
-  const playableTracks = tracks.filter((track) => Boolean(track.audioUrl))
+  const playableTracks = useMemo(() => tracks.filter((track) => Boolean(track.audioUrl)), [tracks])
 
-  const moveTrack = (direction: 1 | -1) => {
-    if (!playableTracks.length) return
+  const moveTrack = useCallback(
+    (direction: 1 | -1) => {
+      if (!playableTracks.length) return
 
-    shouldResumeRef.current = isPlaying
-    setActiveTrack((current) => {
-      const currentIndex = playableTracks.findIndex((track) => track.id === current.id)
-      const safeIndex = currentIndex === -1 ? 0 : currentIndex
-      const nextIndex = (safeIndex + direction + playableTracks.length) % playableTracks.length
-      return playableTracks[nextIndex]
+      shouldResumeRef.current = isPlaying
+      setActiveTrack((current) => {
+        const currentIndex = playableTracks.findIndex((track) => track.id === current.id)
+        const safeIndex = currentIndex === -1 ? 0 : currentIndex
+        const nextIndex = (safeIndex + direction + playableTracks.length) % playableTracks.length
+        return playableTracks[nextIndex]
+      })
+    },
+    [isPlaying, playableTracks],
+  )
+
+  const reorderTracks = useCallback((sourceTrackId: string, targetTrackId: string) => {
+    if (sourceTrackId === targetTrackId) return
+
+    setTracks((currentTracks) => {
+      const sourceIndex = currentTracks.findIndex((track) => track.id === sourceTrackId)
+      const targetIndex = currentTracks.findIndex((track) => track.id === targetTrackId)
+      if (sourceIndex === -1 || targetIndex === -1) return currentTracks
+
+      const nextTracks = [...currentTracks]
+      const [movedTrack] = nextTracks.splice(sourceIndex, 1)
+      nextTracks.splice(targetIndex, 0, movedTrack)
+      return nextTracks
     })
-  }
+  }, [])
+
+  useEffect(() => {
+    setTracks((currentTracks) => {
+      const loadedById = new Map(loadedTracks.map((track) => [track.id, track]))
+      const keptTracks = currentTracks.flatMap((track) => {
+        const loadedTrack = loadedById.get(track.id)
+        return loadedTrack ? [loadedTrack] : []
+      })
+      const keptIds = new Set(keptTracks.map((track) => track.id))
+      const newTracks = loadedTracks.filter((track) => !keptIds.has(track.id))
+      return [...keptTracks, ...newTracks]
+    })
+  }, [loadedTracks])
 
   useEffect(() => {
     setActiveTrack((current) => tracks.find((track) => track.id === current.id) || tracks[0])
@@ -218,6 +250,7 @@ export function usePersistentMusic(localTracks: MusicTrack[], coverFallbacks: st
     progress,
     setVolume,
     setActiveTrack,
+    reorderTracks,
     previousTrack: () => moveTrack(-1),
     nextTrack: () => moveTrack(1),
     togglePlayback,

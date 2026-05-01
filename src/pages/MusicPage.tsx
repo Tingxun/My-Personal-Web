@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
-import { Pause, Play, Radio, SkipBack, SkipForward, Volume2, VolumeX, Waves } from 'lucide-react'
-import { useEffect, useMemo, useRef, type CSSProperties } from 'react'
+import { GripVertical, Pause, Play, Radio, SkipBack, SkipForward, Volume2, VolumeX, Waves } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type DragEvent } from 'react'
 import { pageMotion } from '../constants'
 import type { MusicController } from '../types'
 
@@ -14,9 +14,11 @@ const orbitSlots = [
 ]
 
 export function MusicPage({ music }: { music: MusicController }) {
-  const { tracks, sourceNote, activeTrack, isPlaying, volume, progress, setVolume, setActiveTrack, previousTrack, nextTrack, togglePlayback, audioGraphRef } =
+  const { tracks, sourceNote, activeTrack, isPlaying, volume, progress, setVolume, setActiveTrack, reorderTracks, previousTrack, nextTrack, togglePlayback, audioGraphRef } =
     music
   const spectrumRef = useRef<HTMLCanvasElement | null>(null)
+  const [dragTrackId, setDragTrackId] = useState<string | null>(null)
+  const [dropTrackId, setDropTrackId] = useState<string | null>(null)
   const activeIndex = Math.max(
     0,
     tracks.findIndex((track) => track.id === activeTrack.id),
@@ -24,6 +26,20 @@ export function MusicPage({ music }: { music: MusicController }) {
   const canSkip = tracks.some((track) => track.audioUrl)
   const playableCount = tracks.filter((track) => track.audioUrl).length
   const orbitTracks = useMemo(() => tracks.slice(0, orbitSlots.length), [tracks])
+
+  const handleTrackDragStart = (event: DragEvent<HTMLButtonElement>, trackId: string) => {
+    setDragTrackId(trackId)
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', trackId)
+  }
+
+  const handleTrackDrop = (event: DragEvent<HTMLButtonElement>, targetTrackId: string) => {
+    event.preventDefault()
+    const sourceTrackId = event.dataTransfer.getData('text/plain') || dragTrackId
+    if (sourceTrackId) reorderTracks(sourceTrackId, targetTrackId)
+    setDragTrackId(null)
+    setDropTrackId(null)
+  }
 
   useEffect(() => {
     const canvas = spectrumRef.current
@@ -197,21 +213,44 @@ export function MusicPage({ music }: { music: MusicController }) {
         </div>
 
         <div className="music-track-rail">
-          {tracks.map((track, index) => (
-            <motion.button
-              key={track.id}
-              type="button"
-              className={track.id === activeTrack.id ? 'music-track-chip active' : 'music-track-chip'}
-              onClick={() => setActiveTrack(track)}
-              whileHover={{ y: -6 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              <img src={track.cover} alt="" />
-              <strong>{track.title}</strong>
-              <small>{track.artist}</small>
-            </motion.button>
-          ))}
+          {tracks.map((track, index) => {
+            const className = [
+              'music-track-chip',
+              track.id === activeTrack.id ? 'active' : '',
+              dragTrackId === track.id ? 'dragging' : '',
+              dropTrackId === track.id && dragTrackId !== track.id ? 'drop-target' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')
+
+            return (
+              <button
+                key={track.id}
+                type="button"
+                className={className}
+                draggable
+                onClick={() => setActiveTrack(track)}
+                onDragStart={(event) => handleTrackDragStart(event, track.id)}
+                onDragOver={(event) => {
+                  event.preventDefault()
+                  setDropTrackId(track.id)
+                }}
+                onDragLeave={() => setDropTrackId((current) => (current === track.id ? null : current))}
+                onDrop={(event) => handleTrackDrop(event, track.id)}
+                onDragEnd={() => {
+                  setDragTrackId(null)
+                  setDropTrackId(null)
+                }}
+                aria-label={`${track.title}, drag to change playback order`}
+              >
+                <GripVertical className="music-track-grip" size={18} aria-hidden="true" />
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <img src={track.cover} alt="" />
+                <strong>{track.title}</strong>
+                <small>{track.artist}</small>
+              </button>
+            )
+          })}
         </div>
       </section>
     </motion.div>
