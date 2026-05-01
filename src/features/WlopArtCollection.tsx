@@ -10,9 +10,22 @@ const SAMPLE_SIZE = 50
 const COLUMN_COUNT = 4
 const PIECE_WIDTH = 300
 const PIECE_GAP = 60
+const PIECE_CAPTION_HEIGHT = 42
 const SEGMENT_WIDTH = COLUMN_COUNT * PIECE_WIDTH + (COLUMN_COUNT - 1) * PIECE_GAP
 const SEGMENT_PITCH_X = SEGMENT_WIDTH + PIECE_GAP
 const DEFAULT_SEGMENT_HEIGHT = 3000
+
+type PhotoSize = {
+  width: number
+  height: number
+}
+
+type PositionedTile = {
+  tile: PhotoItem
+  x: number
+  y: number
+  size: PhotoSize
+}
 
 const hashText = (value: string) => {
   let hash = 2166136261
@@ -29,12 +42,28 @@ const samplePhotos = (photos: PhotoItem[], seed: number) =>
   [...photos].sort((left, right) => hashText(`${seed}:${left.id}`) - hashText(`${seed}:${right.id}`)).slice(0, SAMPLE_SIZE)
 
 const preloadPhoto = (src: string) =>
-  new Promise<void>((resolve) => {
+  new Promise<PhotoSize | null>((resolve) => {
     const image = new Image()
-    image.onload = () => resolve()
-    image.onerror = () => resolve()
+    image.onload = () => {
+      resolve(image.naturalWidth && image.naturalHeight ? { width: image.naturalWidth, height: image.naturalHeight } : null)
+    }
+    image.onerror = () => resolve(null)
     image.src = src
   })
+
+const preloadTiles = async (tiles: PhotoItem[]) => {
+  const entries = await Promise.all(
+    tiles.map(async (tile) => {
+      const size = await preloadPhoto(tile.src)
+      return [tile.id, size] as const
+    }),
+  )
+
+  return entries.reduce<Record<string, PhotoSize>>((sizes, [id, size]) => {
+    if (size) sizes[id] = size
+    return sizes
+  }, {})
+}
 
 const waitForImage = (image: HTMLImageElement) => {
   if (image.complete) return Promise.resolve()
@@ -58,7 +87,7 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
   const [isYearSwitching, setIsYearSwitching] = useState(false)
   const [sampleSeed, setSampleSeed] = useState(() => Date.now())
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoItem | null>(null)
-  const [segmentHeight, setSegmentHeight] = useState(DEFAULT_SEGMENT_HEIGHT)
+  const [photoSizes, setPhotoSizes] = useState<Record<string, PhotoSize>>({})
   const stageRef = useRef<HTMLDivElement | null>(null)
   const centerSegmentRef = useRef<HTMLDivElement | null>(null)
   const dragState = useRef<{
@@ -74,6 +103,32 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
   const yearSwitchToken = useRef(0)
   const activePhotos = useMemo(() => photos.filter((photo) => photo.date === activeYear), [activeYear, photos])
   const tiles = useMemo(() => samplePhotos(activePhotos, sampleSeed), [activePhotos, sampleSeed])
+  const { positionedTiles, segmentHeight } = useMemo(() => {
+    const columnHeights = Array.from({ length: COLUMN_COUNT }, () => 0)
+    const fallbackSize = { width: 16, height: 9 }
+
+    const positionedTiles = tiles.map<PositionedTile>((tile) => {
+      const size = photoSizes[tile.id] || fallbackSize
+      const column = columnHeights.indexOf(Math.min(...columnHeights))
+      const imageHeight = Math.round((PIECE_WIDTH * size.height) / size.width)
+      const cardHeight = imageHeight + PIECE_CAPTION_HEIGHT
+      const positionedTile = {
+        tile,
+        x: column * (PIECE_WIDTH + PIECE_GAP),
+        y: columnHeights[column],
+        size,
+      }
+
+      columnHeights[column] += cardHeight + PIECE_GAP
+      return positionedTile
+    })
+
+    const nextHeight = Math.max(...columnHeights, DEFAULT_SEGMENT_HEIGHT) - PIECE_GAP
+    return {
+      positionedTiles,
+      segmentHeight: Math.max(1200, Math.ceil(nextHeight)),
+    }
+  }, [photoSizes, tiles])
   const segmentPitchY = segmentHeight + PIECE_GAP
   const segments = useMemo(
     () =>
@@ -102,14 +157,13 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
 
   useEffect(() => {
     setSelectedPhoto(null)
-    setSegmentHeight(DEFAULT_SEGMENT_HEIGHT)
     requestAnimationFrame(() => {
       const stage = stageRef.current
       if (!stage) return
       stage.scrollLeft = SEGMENT_PITCH_X
-      stage.scrollTop = DEFAULT_SEGMENT_HEIGHT + PIECE_GAP
+      stage.scrollTop = segmentPitchY
     })
-  }, [activeYear])
+  }, [activeYear, segmentPitchY])
 
   useEffect(() => {
     if (!isOpen) return
@@ -138,21 +192,21 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
     }
   }, [isOpen, segmentPitchY, selectedPhoto])
 
-  useEffect(() => {
-    if (!isOpen || !centerSegmentRef.current) return
+  const rememberPhotoSize = (photoId: string, image: HTMLImageElement) => {
+    if (!image.naturalWidth || !image.naturalHeight) return
 
-    const observer = new ResizeObserver(() => measureSegment())
-    observer.observe(centerSegmentRef.current)
-    measureSegment()
+    setPhotoSizes((current) => {
+      const existing = current[photoId]
+      if (existing?.width === image.naturalWidth && existing.height === image.naturalHeight) return current
 
-    return () => observer.disconnect()
-  }, [isOpen])
-
-  const measureSegment = () => {
-    const segment = centerSegmentRef.current
-    if (!segment) return
-    const nextHeight = Math.max(1200, Math.ceil(segment.getBoundingClientRect().height))
-    if (Math.abs(nextHeight - segmentHeight) > 24) setSegmentHeight(nextHeight)
+      return {
+        ...current,
+        [photoId]: {
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+        },
+      }
+    })
   }
 
   const wrapScroll = () => {
@@ -177,10 +231,11 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
     setSampleSeed(nextSeed)
     setIsPreparing(true)
 
-    await Promise.all([Promise.all(nextTiles.map((tile) => preloadPhoto(tile.src))), wait(520)])
+    const [nextSizes] = await Promise.all([preloadTiles(nextTiles), wait(520)])
 
     if (openToken.current !== token) return
 
+    setPhotoSizes((current) => ({ ...current, ...nextSizes }))
     setIsOpen(true)
     setIsPreparing(false)
   }
@@ -214,19 +269,19 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
     setIsYearSwitching(true)
     setSelectedPhoto(null)
 
-    await Promise.all([Promise.all(nextTiles.map((tile) => preloadPhoto(tile.src))), wait(520)])
+    const [nextSizes] = await Promise.all([preloadTiles(nextTiles), wait(520)])
 
     if (yearSwitchToken.current !== token) return
 
+    setPhotoSizes((current) => ({ ...current, ...nextSizes }))
     setActiveYear(year)
     setSampleSeed(nextSeed)
-    setSegmentHeight(DEFAULT_SEGMENT_HEIGHT)
 
     requestAnimationFrame(() => {
       const stage = stageRef.current
       if (!stage) return
       stage.scrollLeft = SEGMENT_PITCH_X
-      stage.scrollTop = DEFAULT_SEGMENT_HEIGHT + PIECE_GAP
+      stage.scrollTop = segmentPitchY
     })
 
     await waitForCenterSegmentImages(nextTiles)
@@ -338,39 +393,46 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
                 >
                   {segments.map((segment) => (
                     <div
-                      key={segment.key}
+                      key={`${activeYear}:${sampleSeed}:${segment.key}`}
                       ref={segment.column === 0 && segment.row === 0 ? centerSegmentRef : undefined}
                       className="wlop-art-segment"
                       style={{
                         left: segment.x,
                         top: segment.y,
                         width: SEGMENT_WIDTH,
-                        '--wlop-column-count': COLUMN_COUNT,
-                        '--wlop-piece-gap': `${PIECE_GAP}px`,
+                        height: segmentHeight,
                       } as React.CSSProperties}
                     >
-                      {tiles.map((tile) => (
-                        <motion.button
-                          key={`${segment.key}:${tile.id}`}
-                          type="button"
-                          className="wlop-art-piece"
-                          data-photo-id={tile.id}
-                          onClick={(event) => event.preventDefault()}
-                          whileHover={{ scale: 1.025, zIndex: 4 }}
-                        >
-                          <img
-                            src={tile.src}
-                            alt={tile.title}
-                            loading={isYearSwitching ? 'eager' : 'lazy'}
-                            draggable={false}
-                            onLoad={measureSegment}
-                          />
-                          <span>
-                            <Maximize2 size={14} />
-                            {tile.title}
-                          </span>
-                        </motion.button>
-                      ))}
+                      {positionedTiles.map(({ tile, x, y, size }) => {
+                        return (
+                          <motion.button
+                            key={`${segment.key}:${tile.id}`}
+                            type="button"
+                            className="wlop-art-piece"
+                            data-photo-id={tile.id}
+                            onClick={(event) => event.preventDefault()}
+                            style={{ left: x, top: y, width: PIECE_WIDTH }}
+                            whileHover={{ scale: 1.025, zIndex: 4 }}
+                          >
+                            <img
+                              src={tile.src}
+                              alt={tile.title}
+                              width={size.width}
+                              height={size.height}
+                              loading={isYearSwitching ? 'eager' : 'lazy'}
+                              draggable={false}
+                              style={{ aspectRatio: `${size.width} / ${size.height}` }}
+                              onLoad={(event) => {
+                                rememberPhotoSize(tile.id, event.currentTarget)
+                              }}
+                            />
+                            <span>
+                              <Maximize2 size={14} />
+                              {tile.title}
+                            </span>
+                          </motion.button>
+                        )
+                      })}
                     </div>
                   ))}
                 </div>

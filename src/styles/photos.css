@@ -457,20 +457,16 @@
 
 .wlop-art-segment {
   position: absolute;
-  column-count: var(--wlop-column-count, 4);
-  column-gap: var(--wlop-piece-gap, 28px);
   padding: 0;
   user-select: none;
 }
 
 .wlop-art-piece {
-  position: relative;
+  position: absolute;
   display: grid;
-  width: 100%;
   grid-template-rows: auto 42px;
   overflow: hidden;
-  break-inside: avoid;
-  margin: 0 0 var(--wlop-piece-gap, 28px);
+  margin: 0;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: var(--panel-solid);
   padding: 0;
@@ -488,6 +484,7 @@
 .wlop-art-piece img {
   width: 100%;
   height: auto;
+  display: block;
   background: rgba(0, 0, 0, 0.28);
   object-fit: contain;
   pointer-events: none;
