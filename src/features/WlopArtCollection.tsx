@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { GalleryHorizontal, Images, Maximize2, X } from 'lucide-react'
@@ -14,6 +14,7 @@ const PIECE_CAPTION_HEIGHT = 42
 const SEGMENT_WIDTH = COLUMN_COUNT * PIECE_WIDTH + (COLUMN_COUNT - 1) * PIECE_GAP
 const SEGMENT_PITCH_X = SEGMENT_WIDTH + PIECE_GAP
 const DEFAULT_SEGMENT_HEIGHT = 3000
+const VISIBLE_BUFFER_RATIO = 0.72
 
 type PhotoSize = {
   width: number
@@ -25,6 +26,22 @@ type PositionedTile = {
   x: number
   y: number
   size: PhotoSize
+  height: number
+}
+
+type VisiblePiece = PositionedTile & {
+  key: string
+  segmentX: number
+  segmentY: number
+}
+
+type StageViewport = {
+  left: number
+  top: number
+  width: number
+  height: number
+  directionX: number
+  directionY: number
 }
 
 const hashText = (value: string) => {
@@ -88,8 +105,17 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
   const [sampleSeed, setSampleSeed] = useState(() => Date.now())
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoItem | null>(null)
   const [photoSizes, setPhotoSizes] = useState<Record<string, PhotoSize>>({})
+  const [stageViewport, setStageViewport] = useState<StageViewport>({
+    left: SEGMENT_PITCH_X,
+    top: DEFAULT_SEGMENT_HEIGHT + PIECE_GAP,
+    width: 1440,
+    height: 900,
+    directionX: 0,
+    directionY: 0,
+  })
   const stageRef = useRef<HTMLDivElement | null>(null)
-  const centerSegmentRef = useRef<HTMLDivElement | null>(null)
+  const viewportFrameRef = useRef(0)
+  const lastViewportRef = useRef(stageViewport)
   const dragState = useRef<{
     x: number
     y: number
@@ -117,6 +143,7 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
         x: column * (PIECE_WIDTH + PIECE_GAP),
         y: columnHeights[column],
         size,
+        height: cardHeight,
       }
 
       columnHeights[column] += cardHeight + PIECE_GAP
@@ -143,10 +170,72 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
       ),
     [segmentPitchY],
   )
+  const visiblePieces = useMemo(() => {
+    const bufferX = Math.max(360, stageViewport.width * VISIBLE_BUFFER_RATIO)
+    const bufferY = Math.max(420, stageViewport.height * VISIBLE_BUFFER_RATIO)
+    const viewportLeft = stageViewport.left - bufferX
+    const viewportTop = stageViewport.top - bufferY
+    const viewportRight = stageViewport.left + stageViewport.width + bufferX
+    const viewportBottom = stageViewport.top + stageViewport.height + bufferY
+
+    return segments.flatMap<VisiblePiece>((segment) => {
+      const segmentLeft = segment.x
+      const segmentTop = segment.y
+      const segmentRight = segmentLeft + SEGMENT_WIDTH
+      const segmentBottom = segmentTop + segmentHeight
+
+      if (
+        segmentRight < viewportLeft ||
+        segmentLeft > viewportRight ||
+        segmentBottom < viewportTop ||
+        segmentTop > viewportBottom
+      ) {
+        return []
+      }
+
+      return positionedTiles.flatMap((piece) => {
+        const left = segmentLeft + piece.x
+        const top = segmentTop + piece.y
+        const right = left + PIECE_WIDTH
+        const bottom = top + piece.height
+
+        if (right < viewportLeft || left > viewportRight || bottom < viewportTop || top > viewportBottom) return []
+
+        return {
+          ...piece,
+          key: `${segment.key}:${piece.tile.id}`,
+          segmentX: segment.x,
+          segmentY: segment.y,
+        }
+      })
+    })
+  }, [positionedTiles, segmentHeight, segments, stageViewport])
+
+  const syncStageViewport = useCallback((nextStage?: HTMLDivElement | null) => {
+    const stage = nextStage || stageRef.current
+    if (!stage) return
+
+    if (viewportFrameRef.current) window.cancelAnimationFrame(viewportFrameRef.current)
+    viewportFrameRef.current = window.requestAnimationFrame(() => {
+      const current = lastViewportRef.current
+      const nextViewport = {
+        left: stage.scrollLeft,
+        top: stage.scrollTop,
+        width: stage.clientWidth,
+        height: stage.clientHeight,
+        directionX: Math.sign(stage.scrollLeft - current.left),
+        directionY: Math.sign(stage.scrollTop - current.top),
+      }
+
+      lastViewportRef.current = nextViewport
+      setStageViewport(nextViewport)
+    })
+  }, [])
 
   useEffect(() => {
     return () => {
       openToken.current += 1
+      if (viewportFrameRef.current) window.cancelAnimationFrame(viewportFrameRef.current)
     }
   }, [])
 
@@ -162,8 +251,9 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
       if (!stage) return
       stage.scrollLeft = SEGMENT_PITCH_X
       stage.scrollTop = segmentPitchY
+      syncStageViewport(stage)
     })
-  }, [activeYear, segmentPitchY])
+  }, [activeYear, segmentPitchY, syncStageViewport])
 
   useEffect(() => {
     if (!isOpen) return
@@ -185,12 +275,16 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
       }
     }
 
+    const syncOnResize = () => syncStageViewport()
+
     window.addEventListener('keydown', closeOnEscape)
+    window.addEventListener('resize', syncOnResize)
     return () => {
       document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', closeOnEscape)
+      window.removeEventListener('resize', syncOnResize)
     }
-  }, [isOpen, segmentPitchY, selectedPhoto])
+  }, [isOpen, segmentPitchY, selectedPhoto, syncStageViewport])
 
   const rememberPhotoSize = (photoId: string, image: HTMLImageElement) => {
     if (!image.naturalWidth || !image.naturalHeight) return
@@ -217,6 +311,7 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
     if (stage.scrollLeft > SEGMENT_PITCH_X * 1.58) stage.scrollLeft -= SEGMENT_PITCH_X
     if (stage.scrollTop < segmentPitchY * 0.42) stage.scrollTop += segmentPitchY
     if (stage.scrollTop > segmentPitchY * 1.58) stage.scrollTop -= segmentPitchY
+    syncStageViewport(stage)
   }
 
   const openCollection = async () => {
@@ -244,11 +339,11 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
     await waitForFrame()
     await waitForFrame()
 
-    const segment = centerSegmentRef.current
-    if (!segment) return
+    const stage = stageRef.current
+    if (!stage) return
 
     const expectedIds = new Set(expectedTiles.map((tile) => tile.id))
-    const images = Array.from(segment.querySelectorAll<HTMLImageElement>('.wlop-art-piece img')).filter((image) => {
+    const images = Array.from(stage.querySelectorAll<HTMLImageElement>('.wlop-art-piece img')).filter((image) => {
       const piece = image.closest<HTMLElement>('.wlop-art-piece')
       return piece?.dataset.photoId ? expectedIds.has(piece.dataset.photoId) : false
     })
@@ -282,6 +377,7 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
       if (!stage) return
       stage.scrollLeft = SEGMENT_PITCH_X
       stage.scrollTop = segmentPitchY
+      syncStageViewport(stage)
     })
 
     await waitForCenterSegmentImages(nextTiles)
@@ -393,50 +489,59 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
                     height: segmentPitchY * 3 + 640,
                   }}
                 >
-                  {segments.map((segment) => (
-                    <div
-                      key={`${activeYear}:${sampleSeed}:${segment.key}`}
-                      ref={segment.column === 0 && segment.row === 0 ? centerSegmentRef : undefined}
-                      className="wlop-art-segment"
-                      style={{
-                        left: segment.x,
-                        top: segment.y,
-                        width: SEGMENT_WIDTH,
-                        height: segmentHeight,
-                      } as React.CSSProperties}
-                    >
-                      {positionedTiles.map(({ tile, x, y, size }) => {
-                        return (
-                          <motion.button
-                            key={`${segment.key}:${tile.id}`}
-                            type="button"
-                            className="wlop-art-piece"
-                            data-photo-id={tile.id}
-                            onClick={(event) => event.preventDefault()}
-                            style={{ left: x, top: y, width: PIECE_WIDTH }}
-                            whileHover={{ scale: 1.025, zIndex: 4 }}
-                          >
-                            <img
-                              src={tile.src}
-                              alt={tile.title}
-                              width={size.width}
-                              height={size.height}
-                              loading={isYearSwitching ? 'eager' : 'lazy'}
-                              draggable={false}
-                              style={{ aspectRatio: `${size.width} / ${size.height}` }}
-                              onLoad={(event) => {
-                                rememberPhotoSize(tile.id, event.currentTarget)
-                              }}
-                            />
-                            <span>
-                              <Maximize2 size={14} />
-                              {tile.title}
-                            </span>
-                          </motion.button>
-                        )
-                      })}
-                    </div>
-                  ))}
+                  <AnimatePresence initial={false}>
+                    {visiblePieces.map(({ key, tile, segmentX, segmentY, x, y, size }) => (
+                      <motion.button
+                        key={`${activeYear}:${sampleSeed}:${key}`}
+                        type="button"
+                        className="wlop-art-piece"
+                        data-photo-id={tile.id}
+                        onClick={(event) => event.preventDefault()}
+                        style={{ left: segmentX + x, top: segmentY + y, width: PIECE_WIDTH }}
+                        initial={{
+                          opacity: 0,
+                          scale: 0.82,
+                          x: stageViewport.directionX * 28,
+                          y: stageViewport.directionY * 28,
+                          filter: 'blur(14px) saturate(0.4)',
+                          clipPath: 'circle(0% at 50% 50%)',
+                        }}
+                        animate={{
+                          opacity: 1,
+                          scale: 1,
+                          x: 0,
+                          y: 0,
+                          filter: 'blur(0px) saturate(1)',
+                          clipPath: 'circle(72% at 50% 50%)',
+                        }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.88,
+                          filter: 'blur(10px) saturate(0.6)',
+                          clipPath: 'circle(8% at 50% 50%)',
+                        }}
+                        transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+                        whileHover={{ scale: 1.025, zIndex: 4 }}
+                      >
+                        <img
+                          src={tile.src}
+                          alt={tile.title}
+                          width={size.width}
+                          height={size.height}
+                          loading={isYearSwitching ? 'eager' : 'lazy'}
+                          draggable={false}
+                          style={{ aspectRatio: `${size.width} / ${size.height}` }}
+                          onLoad={(event) => {
+                            rememberPhotoSize(tile.id, event.currentTarget)
+                          }}
+                        />
+                        <span>
+                          <Maximize2 size={14} />
+                          {tile.title}
+                        </span>
+                      </motion.button>
+                    ))}
+                  </AnimatePresence>
                 </div>
                 <AnimatePresence>
                   {isYearSwitching ? (

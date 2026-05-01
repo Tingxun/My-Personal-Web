@@ -501,12 +501,6 @@
   }
 }
 
-.wlop-art-segment {
-  position: absolute;
-  padding: 0;
-  user-select: none;
-}
-
 .wlop-art-piece {
   position: absolute;
   display: grid;
@@ -519,7 +513,10 @@
   color: var(--text);
   box-shadow: 0 22px 56px rgba(0, 0, 0, 0.36);
   cursor: zoom-in;
+  contain: layout paint;
+  transform-origin: center;
   user-select: none;
+  will-change: transform, opacity, filter, clip-path;
   -webkit-user-select: none;
 }
 
