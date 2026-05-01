@@ -295,7 +295,7 @@
 .metaball-type {
   --type-ball-x: calc(330px * var(--orbit-scale));
   --type-ball-y: calc(73px * var(--orbit-scale));
-  --type-ball-radius: calc(144px * var(--orbit-scale));
+  --type-ball-radius: calc(116px * var(--orbit-scale));
   position: absolute;
   left: 50%;
   top: 50%;
@@ -337,21 +337,21 @@
   color: #f8fafc;
   text-shadow: none;
   -webkit-mask-image:
-    radial-gradient(circle var(--type-ball-radius) at var(--type-ball-x) var(--type-ball-y), #000 99%, transparent 100%),
+    radial-gradient(circle var(--type-ball-radius) at var(--type-ball-x) var(--type-ball-y), #000 98%, transparent 100%),
     radial-gradient(
       circle calc(var(--metaball-child-mask-radius) * var(--orbit-scale)) at
         calc(var(--metaball-child-mask-x) * var(--orbit-scale))
         calc(var(--metaball-child-mask-y) * var(--orbit-scale)),
-      #000 99%,
+      #000 98%,
       transparent 100%
     );
   mask-image:
-    radial-gradient(circle var(--type-ball-radius) at var(--type-ball-x) var(--type-ball-y), #000 99%, transparent 100%),
+    radial-gradient(circle var(--type-ball-radius) at var(--type-ball-x) var(--type-ball-y), #000 98%, transparent 100%),
     radial-gradient(
       circle calc(var(--metaball-child-mask-radius) * var(--orbit-scale)) at
         calc(var(--metaball-child-mask-x) * var(--orbit-scale))
         calc(var(--metaball-child-mask-y) * var(--orbit-scale)),
-      #000 99%,
+      #000 98%,
       transparent 100%
     );
   -webkit-mask-repeat: no-repeat;

@@ -499,8 +499,16 @@ export const localTracks: MusicTrack[] = [
     id: 'merry-christmas',
     title: 'Merry Christmas',
     artist: 'Mr. Lawrence-Utada',
-    cover: '/assets/optimized/photos/wlop-01-thumb.webp',
+    cover: '/assets/optimized/photos/wlop-03-thumb.webp',
     audioUrl: '/assets/music/Merry%20Christmas%20Mr.%20Lawrence-Utada.mp3',
+    source: 'local',
+  },
+  {
+    id: 'NO BATIDÃO(Explicit)',
+    title: 'NO BATIDÃO(Explicit)',
+    artist: 'ZxKAI&SLXUGHTER',
+    cover: '/assets/optimized/wlop/2022/wlop-2022-2-kaine-4k-12ed499b-thumb.webp',
+    audioUrl: '/assets/music/NO%20BATIDAO(Explicit)-ZxKAI&SLXUGHTER.mp3',
     source: 'local',
   },
 ]
