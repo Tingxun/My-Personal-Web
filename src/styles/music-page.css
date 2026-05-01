@@ -413,8 +413,8 @@
 }
 
 .music-track-chip > span {
-  grid-column: 2;
-  font-size: 0.85rem;
+  grid-column: 1rem;
+  font-size: 2rem;
 }
 
 .music-track-chip strong,

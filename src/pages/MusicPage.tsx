@@ -124,7 +124,6 @@ export function MusicPage({ music }: { music: MusicController }) {
           <div className={isPlaying ? 'music-turntable spinning' : 'music-turntable'}>
             <div className="music-record-rings" aria-hidden="true" />
             <img src={activeTrack.cover} alt="" />
-            <span style={{ transform: `rotate(${progress * 360}deg)` }} />
           </div>
 
           <div className="music-armature" aria-hidden="true">

@@ -14,6 +14,7 @@
   --distort-y-px: 50%;
   --distort-strength: 0;
   --distort-opacity: 0;
+  --reveal-progress: 0;
   position: relative;
   overflow: hidden;
   min-height: clamp(170px, 24vw, 390px);
@@ -25,6 +26,18 @@
   color: var(--distortion-ink);
   cursor: crosshair;
   isolation: isolate;
+}
+
+/* 横幅内容容器 - 随滚动从上方滑入 */
+.distortion-footer .distortion-word {
+  transform: translateY(calc((1 - var(--reveal-progress)) * -80%));
+  transition: transform 0.15s ease-out;
+}
+
+/* 标签也随横幅一起滑入 */
+.distortion-footer .distortion-label {
+  transform: translateY(calc((1 - var(--reveal-progress)) * -200%));
+  transition: transform 0.15s ease-out;
 }
 
 .distortion-footer::before,
@@ -143,4 +156,3 @@
   width: min(1180px, calc(100% - 32px));
   margin: 16px auto 0;
 }
-

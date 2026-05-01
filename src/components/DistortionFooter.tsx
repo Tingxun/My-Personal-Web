@@ -1,4 +1,4 @@
-import { useRef, useState, type CSSProperties, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 
 const footerWord = 'MYWEB'
 const sliceCount = 14
@@ -20,6 +20,7 @@ type DistortionState = {
 export function DistortionFooter() {
   const lastPointerRef = useRef({ x: 0, y: 0, time: 0 })
   const wordRef = useRef<HTMLDivElement | null>(null)
+  const footerRef = useRef<HTMLElement | null>(null)
   const [distortion, setDistortion] = useState<DistortionState>({
     x: 50,
     y: 50,
@@ -29,6 +30,48 @@ export function DistortionFooter() {
     velocityX: 0,
     velocityY: 0,
   })
+  const [revealProgress, setRevealProgress] = useState(0)
+
+  // 滚动监听效果
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!footerRef.current) return
+
+      const footer = footerRef.current
+      const footerRect = footer.getBoundingClientRect()
+      const windowHeight = window.innerHeight
+
+      // 计算 footer 区域在视口中的位置
+      // footer 顶部进入视口底部时开始显示
+      // footer 完全进入视口时完全显示
+      const footerTop = footerRect.top
+      const footerHeight = footerRect.height
+      const bannerHeight = footerHeight * 0.75 // 横幅区域大约占 footer 的 75%
+
+      // 计算进度：
+      // 当 footer 顶部进入视口底部时，progress = 0
+      // 当 footer 底部进入视口底部时，progress = 1
+      const startReveal = windowHeight // footer 顶部到达视口底部
+      const endReveal = windowHeight - bannerHeight // footer 横幅完全显示
+
+      let progress = 0
+      if (footerTop <= startReveal && footerTop >= endReveal) {
+        progress = (startReveal - footerTop) / (startReveal - endReveal)
+      } else if (footerTop < endReveal) {
+        progress = 1
+      }
+
+      // 限制在 0-1 范围内
+      progress = Math.max(0, Math.min(1, progress))
+      setRevealProgress(progress)
+    }
+
+    // 初始计算
+    handleScroll()
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const getWordPointerPosition = (event: PointerEvent<HTMLDivElement>) => {
     const rect = wordRef.current?.getBoundingClientRect() ?? event.currentTarget.getBoundingClientRect()
@@ -84,7 +127,7 @@ export function DistortionFooter() {
   }
 
   return (
-    <footer className="site-footer">
+    <footer ref={footerRef} className="site-footer">
       <div
         className={distortion.strength > 0 ? 'distortion-footer distorting' : 'distortion-footer'}
         onPointerEnter={primePointer}
@@ -98,6 +141,7 @@ export function DistortionFooter() {
             '--distort-y-px': `${distortion.yPx}px`,
             '--distort-strength': distortion.strength,
             '--distort-opacity': distortion.strength > 0 ? 1 : 0,
+            '--reveal-progress': revealProgress,
           } as CSSProperties
         }
       >
