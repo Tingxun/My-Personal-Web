@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Code2, Gamepad2, Grid3X3, Music2, Sparkles } from 'lucide-react'
-import { useRef, useState, type CSSProperties, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 import { InteractiveCard } from '../components/InteractiveCard'
 import { SectionHeading } from '../components/SectionHeading'
 import { CreativeSignalSection } from '../features/CreativeSignalSection'
@@ -8,47 +8,105 @@ import { TactilePlayground } from '../features/TactilePlayground'
 import { pageMotion } from '../constants'
 import type { PageId } from '../types'
 
+const idleMetaballOffset = { x: 0, y: 0, angle: 0, strength: 0, active: false, returning: false }
+
+const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value))
+
+const smoothStep = (edgeStart: number, edgeEnd: number, value: number) => {
+  const progress = clamp((value - edgeStart) / (edgeEnd - edgeStart))
+  return progress * progress * (3 - 2 * progress)
+}
+
 export function HomePage({ goToPage }: { goToPage: (page: PageId) => void }) {
   const orbitCoreRef = useRef<HTMLDivElement | null>(null)
-  const [metaballOffset, setMetaballOffset] = useState({ x: 0, y: 0, angle: 0, strength: 0, active: false })
+  const metaballFrameRef = useRef(0)
+  const metaballPointerRef = useRef<{ x: number; y: number } | null>(null)
+  const metaballReturnTimerRef = useRef(0)
+  const [metaballOffset, setMetaballOffset] = useState(idleMetaballOffset)
 
-  const resetMetaball = () => {
-    setMetaballOffset({ x: 0, y: 0, angle: 0, strength: 0, active: false })
+  useEffect(() => {
+    return () => {
+      if (metaballFrameRef.current) window.cancelAnimationFrame(metaballFrameRef.current)
+      if (metaballReturnTimerRef.current) window.clearTimeout(metaballReturnTimerRef.current)
+    }
+  }, [])
+
+  const releaseMetaball = () => {
+    metaballPointerRef.current = null
+    if (metaballFrameRef.current) {
+      window.cancelAnimationFrame(metaballFrameRef.current)
+      metaballFrameRef.current = 0
+    }
+    if (metaballReturnTimerRef.current) window.clearTimeout(metaballReturnTimerRef.current)
+
+    setMetaballOffset((current) =>
+      current.active
+        ? {
+            ...current,
+            x: 0,
+            y: 0,
+            strength: 0,
+            active: true,
+            returning: true,
+          }
+        : current,
+    )
+
+    metaballReturnTimerRef.current = window.setTimeout(() => {
+      setMetaballOffset(idleMetaballOffset)
+      metaballReturnTimerRef.current = 0
+    }, 620)
   }
 
-  const updateMetaball = (event: PointerEvent<HTMLDivElement>) => {
+  const syncMetaball = () => {
+    metaballFrameRef.current = 0
     const core = orbitCoreRef.current
-    if (!core) return
+    const pointer = metaballPointerRef.current
+    if (!core || !pointer) return
 
     const rect = core.getBoundingClientRect()
     const centerX = rect.left + rect.width / 2
     const centerY = rect.top + rect.height / 2
-    const dx = event.clientX - centerX
-    const dy = event.clientY - centerY
+    const dx = pointer.x - centerX
+    const dy = pointer.y - centerY
     const distance = Math.hypot(dx, dy) || 1
     const radius = rect.width / 2
-    const innerBoundary = radius * 1.02
-    const outerBoundary = radius * 1.9
-    const innerStrength = Math.min(1, Math.max(0, (distance - innerBoundary) / (radius * 0.28)))
-    const outerStrength = Math.min(1, Math.max(0, (outerBoundary - distance) / (outerBoundary - radius * 1.18)))
-    const strength = Math.min(innerStrength, outerStrength)
+    const attractionRange = radius * 2.32
     const angle = Math.atan2(dy, dx)
 
-    if (strength <= 0) {
-      resetMetaball()
+    if (distance > attractionRange) {
+      releaseMetaball()
       return
     }
 
-    const orbitDistance = radius * (1.02 + strength * 0.42)
+    const distanceRatio = clamp(distance / attractionRange)
+    const strength = Math.max(0.18, smoothStep(0.02, 0.82, distanceRatio))
+    const visualMainRadius = radius * 1.35
+    const pullProgress = smoothStep(0.02, 0.72, distanceRatio)
+    const pullDistance = visualMainRadius * (0.8 + pullProgress * 0.2)
 
     setMetaballOffset({
-      x: Math.cos(angle) * orbitDistance,
-      y: Math.sin(angle) * orbitDistance,
+      x: Math.cos(angle) * pullDistance,
+      y: Math.sin(angle) * pullDistance,
       angle,
       strength,
       active: true,
+      returning: false,
     })
   }
+
+  const updateMetaball = (event: PointerEvent<HTMLDivElement>) => {
+    if (metaballReturnTimerRef.current) {
+      window.clearTimeout(metaballReturnTimerRef.current)
+      metaballReturnTimerRef.current = 0
+    }
+    metaballPointerRef.current = { x: event.clientX, y: event.clientY }
+
+    if (metaballFrameRef.current) return
+    metaballFrameRef.current = window.requestAnimationFrame(syncMetaball)
+  }
+
+  const metaballDistance = Math.hypot(metaballOffset.x, metaballOffset.y)
 
   return (
     <motion.div key="home" {...pageMotion}>
@@ -80,7 +138,7 @@ export function HomePage({ goToPage }: { goToPage: (page: PageId) => void }) {
         <motion.div
           className="hero-orbit"
           onPointerMove={updateMetaball}
-          onPointerLeave={resetMetaball}
+          onPointerLeave={releaseMetaball}
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.9, delay: 0.15 }}
@@ -97,18 +155,18 @@ export function HomePage({ goToPage }: { goToPage: (page: PageId) => void }) {
                 '--metaball-glow': 0.16 + metaballOffset.strength * 0.26,
                 '--metaball-halo': 0.46 + metaballOffset.strength * 0.28,
                 '--metaball-core-scale': 0.99 + metaballOffset.strength * 0.018,
-                '--metaball-bridge-width': `${24 + metaballOffset.strength * 78}px`,
+                '--metaball-bridge-width': `${24 + metaballDistance * 0.54}px`,
                 '--metaball-bridge-height': `${24 + metaballOffset.strength * 24}px`,
                 '--metaball-bridge-opacity': metaballOffset.strength * 0.96,
-                '--metaball-bridge-x': `${86 + metaballOffset.strength * 18}px`,
+                '--metaball-bridge-x': `${Math.max(42, metaballDistance * 0.5)}px`,
                 '--metaball-bridge-scale': 0.18 + metaballOffset.strength * 0.82,
-                '--metaball-child-size': `${42 + metaballOffset.strength * 52}px`,
+                '--metaball-child-size': `${58 + metaballOffset.strength * 36}px`,
                 '--metaball-child-mask-x': `${330 + metaballOffset.x}px`,
                 '--metaball-child-mask-y': `${73 + metaballOffset.y}px`,
                 '--metaball-child-mask-radius': `${72 + metaballOffset.strength * 72}px`,
                 '--metaball-child-glow': 0.16 + metaballOffset.strength * 0.44,
-                '--metaball-child-opacity': metaballOffset.strength * 0.96,
-                '--metaball-child-scale': 0.24 + metaballOffset.strength * 0.98,
+                '--metaball-child-opacity': metaballOffset.active ? 0.26 + metaballOffset.strength * 0.7 : 0,
+                '--metaball-child-scale': metaballOffset.active ? 0.84 + metaballOffset.strength * 0.28 : 0.24,
                 '--metaball-ripple-opacity': metaballOffset.strength * 0.58,
                 '--metaball-ripple-start': metaballOffset.strength * 0.54,
               } as CSSProperties

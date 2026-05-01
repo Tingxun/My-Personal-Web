@@ -23,10 +23,15 @@ export function GeometryField() {
     let width = 0
     let height = 0
     let frame = 0
+    let canvasLeft = 0
+    let canvasTop = 0
     let tick = 0
 
     const resize = () => {
       const ratio = window.devicePixelRatio || 1
+      const rect = canvas.getBoundingClientRect()
+      canvasLeft = rect.left
+      canvasTop = rect.top
       width = canvas.clientWidth
       height = canvas.clientHeight
       canvas.width = width * ratio
@@ -102,16 +107,15 @@ export function GeometryField() {
     }
 
     const updatePointer = (event: PointerEvent) => {
-      const rect = canvas.getBoundingClientRect()
-      pointer.x = event.clientX - rect.left
-      pointer.y = event.clientY - rect.top
+      pointer.x = event.clientX - canvasLeft
+      pointer.y = event.clientY - canvasTop
       pointer.active = true
     }
 
     resize()
     draw()
     window.addEventListener('resize', resize)
-    window.addEventListener('pointermove', updatePointer)
+    window.addEventListener('pointermove', updatePointer, { passive: true })
 
     return () => {
       cancelAnimationFrame(frame)

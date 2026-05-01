@@ -53,12 +53,28 @@ function App() {
   }, [activePage])
 
   useEffect(() => {
+    let pointerFrame = 0
+    let pointerX = window.innerWidth / 2
+    let pointerY = window.innerHeight / 2
+
     const syncPointer = (event: PointerEvent) => {
-      document.documentElement.style.setProperty('--pointer-x', `${event.clientX}px`)
-      document.documentElement.style.setProperty('--pointer-y', `${event.clientY}px`)
+      pointerX = event.clientX
+      pointerY = event.clientY
+
+      if (pointerFrame) return
+
+      pointerFrame = window.requestAnimationFrame(() => {
+        document.documentElement.style.setProperty('--pointer-x', `${pointerX}px`)
+        document.documentElement.style.setProperty('--pointer-y', `${pointerY}px`)
+        pointerFrame = 0
+      })
     }
-    window.addEventListener('pointermove', syncPointer)
-    return () => window.removeEventListener('pointermove', syncPointer)
+
+    window.addEventListener('pointermove', syncPointer, { passive: true })
+    return () => {
+      if (pointerFrame) window.cancelAnimationFrame(pointerFrame)
+      window.removeEventListener('pointermove', syncPointer)
+    }
   }, [])
 
   useEffect(() => {

@@ -169,7 +169,7 @@
   border-radius: 999px;
   background: transparent;
   clip-path: none;
-  cursor: crosshair;
+  cursor: default;
   touch-action: none;
 }
 

@@ -490,9 +490,17 @@ export const localTracks: MusicTrack[] = [
   {
     id: 'the-great-despair',
     title: 'THE GREAT DESPAIR',
-    artist: 'Local Music',
+    artist: 'Warframe',
     cover: '/assets/optimized/photos/wlop-01-thumb.webp',
     audioUrl: '/assets/music/THE%20GREAT%20DESPAIR.mp3',
+    source: 'local',
+  },
+  {
+    id: 'merry-christmas',
+    title: 'Merry Christmas',
+    artist: 'Mr. Lawrence-Utada',
+    cover: '/assets/optimized/photos/wlop-01-thumb.webp',
+    audioUrl: '/assets/music/Merry%20Christmas%20Mr.%20Lawrence-Utada.mp3',
     source: 'local',
   },
 ]
