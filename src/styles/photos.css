@@ -209,75 +209,124 @@
   position: relative;
   display: grid;
   width: 100%;
-  min-height: 170px;
+  min-height: 320px;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   gap: 18px;
   overflow: hidden;
-  border: 1px solid rgba(109, 232, 255, 0.28);
+  border: 1px solid rgba(255, 211, 135, 0.3);
   background:
-    linear-gradient(115deg, rgba(7, 9, 15, 0.88), rgba(16, 32, 49, 0.78)),
-    radial-gradient(circle at 74% 18%, rgba(157, 255, 119, 0.2), transparent 34%),
-    radial-gradient(circle at 14% 70%, rgba(109, 232, 255, 0.16), transparent 30%);
+    linear-gradient(90deg, rgba(3, 8, 16, 0.56), rgba(5, 22, 36, 0.3) 56%, rgba(4, 8, 13, 0.46)),
+    url("/assets/optimized/wlop/2024/wlop-2024-dome2-2-4k-d98b3764.webp") center 58% / cover;
   clip-path: polygon(22px 0, 100% 0, 100% calc(100% - 30px), calc(100% - 34px) 100%, 0 100%, 0 22px);
   padding: 24px;
   color: var(--text);
   text-align: left;
   cursor: pointer;
-  box-shadow: var(--shadow);
+  box-shadow:
+    0 34px 96px rgba(0, 0, 0, 0.46),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  isolation: isolate;
+  transform: translateZ(0);
+  transition:
+    border-color 0.28s ease,
+    box-shadow 0.28s ease,
+    filter 0.28s ease,
+    transform 0.28s ease;
 }
 
 .wlop-entry-card::before {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
-  background-size: 34px 34px;
+    radial-gradient(circle at 72% 44%, rgba(255, 229, 179, 0.2), transparent 25%),
+    linear-gradient(115deg, rgba(255, 227, 178, 0.12), transparent 40%, rgba(14, 99, 140, 0.16)),
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: auto, auto, 38px 38px, 38px 38px;
   content: "";
-  opacity: 0.46;
+  mix-blend-mode: screen;
+  opacity: 0.58;
   pointer-events: none;
 }
 
 .wlop-entry-card::after {
   position: absolute;
-  right: -7%;
-  bottom: -46%;
-  width: min(520px, 62vw);
-  aspect-ratio: 1;
-  border: 1px solid rgba(109, 232, 255, 0.24);
-  background: radial-gradient(circle, rgba(109, 232, 255, 0.22), transparent 68%);
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  right: 22px;
+  bottom: 22px;
+  width: min(360px, 44vw);
+  height: 1px;
+  background: rgba(255, 225, 172, 0.44);
   content: "";
-  transform: rotate(18deg);
-  transition: transform 0.38s ease;
+  pointer-events: none;
+  transition: opacity 0.24s ease;
 }
 
-.wlop-entry-card:hover::after {
-  transform: rotate(26deg) scale(1.06);
+.wlop-entry-card:hover {
+  border-color: rgba(255, 224, 171, 0.72);
+  box-shadow:
+    0 40px 112px rgba(0, 0, 0, 0.52),
+    0 0 34px rgba(255, 190, 93, 0.16),
+    inset 0 0 0 1px rgba(255, 238, 203, 0.18);
+  filter: saturate(1.08) brightness(1.07);
+  transform: translateY(-4px);
 }
 
-.wlop-entry-card span {
+.wlop-entry-card:active {
+  transform: translateY(-1px) scale(0.997);
+}
+
+.wlop-entry-copy {
   position: relative;
   z-index: 1;
   display: grid;
+  max-width: 470px;
   gap: 8px;
 }
 
 .wlop-entry-card strong {
+  color: #f9fbff;
   font-size: clamp(1.55rem, 3vw, 3rem);
   line-height: 1;
+  text-shadow:
+    0 0 22px rgba(255, 218, 149, 0.34),
+    0 8px 42px rgba(0, 0, 0, 0.55);
 }
 
 .wlop-entry-card small {
-  color: var(--muted);
+  max-width: 420px;
+  color: #ffdca4;
   font-weight: 800;
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.72);
 }
 
-.wlop-entry-card > svg {
+.wlop-entry-action {
   position: relative;
   z-index: 1;
-  color: var(--green);
+  display: grid;
+  width: 58px;
+  height: 58px;
+  align-self: end;
+  justify-self: end;
+  place-items: center;
+  border: 1px solid rgba(255, 219, 155, 0.48);
+  background: rgba(255, 189, 87, 0.1);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  color: #ffe1ac;
+  transition:
+    background 0.24s ease,
+    color 0.24s ease,
+    transform 0.24s ease;
+}
+
+.wlop-entry-card:hover .wlop-entry-action {
+  background: rgba(255, 213, 132, 0.2);
+  color: #fff7de;
+  transform: scale(1.08);
+}
+
+.wlop-entry-card:hover::after {
+  opacity: 0.82;
 }
 
 .wlop-art-overlay {

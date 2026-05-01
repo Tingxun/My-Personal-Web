@@ -300,12 +300,14 @@ export function WlopArtCollection({ photos }: { photos: PhotoItem[] }) {
         text="从 WLOP 收藏中随机抽取 50 张作品，进入后以可拖动的循环画展浏览。"
         icon={<Images size={16} />}
       />
-      <button className="wlop-entry-card" type="button" onClick={openCollection}>
-        <span>
-          <strong>进入 WLOP艺术集</strong>
-          <small>{photos.length} 张作品 / 按年份入库 / 每年随机加载 50 张</small>
+      <button className="wlop-entry-card" type="button" onClick={openCollection} aria-label="打开 WLOP 艺术集">
+        <span className="wlop-entry-copy">
+          <strong>打开画展</strong>
+          <small>{photos.length} 张作品 / 2022-2024 / 拖动浏览</small>
         </span>
-        <GalleryHorizontal size={28} />
+        <span className="wlop-entry-action">
+          <GalleryHorizontal size={22} />
+        </span>
       </button>
       {createPortal(
         <AnimatePresence>
