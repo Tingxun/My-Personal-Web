@@ -91,6 +91,7 @@ export function usePersistentMusic(localTracks: MusicTrack[], coverFallbacks: st
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const audioGraphRef = useRef<AudioGraph | null>(null)
   const shouldResumeRef = useRef(false)
+  const volumeRef = useRef(volume)
 
   const playableTracks = tracks.filter((track) => Boolean(track.audioUrl))
 
@@ -111,6 +112,7 @@ export function usePersistentMusic(localTracks: MusicTrack[], coverFallbacks: st
   }, [tracks])
 
   useEffect(() => {
+    volumeRef.current = volume
     const audio = audioRef.current
     if (!audio) return
     audio.volume = volume
@@ -126,7 +128,7 @@ export function usePersistentMusic(localTracks: MusicTrack[], coverFallbacks: st
       return
     }
     audio.load()
-    audio.volume = volume
+    audio.volume = volumeRef.current
     setIsPlaying(false)
     setProgress(0)
 
@@ -142,7 +144,7 @@ export function usePersistentMusic(localTracks: MusicTrack[], coverFallbacks: st
       }
       void resumePlayback()
     }
-  }, [activeTrack, volume])
+  }, [activeTrack])
 
   useEffect(() => {
     const audio = audioRef.current

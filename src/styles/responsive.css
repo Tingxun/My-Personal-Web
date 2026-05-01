@@ -105,6 +105,10 @@
     left: 34px;
   }
 
+  .track-list {
+    grid-template-columns: 1fr;
+  }
+
   .now-playing {
     grid-template-columns: 64px 1fr auto;
     gap: 10px;
