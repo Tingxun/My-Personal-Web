@@ -123,6 +123,30 @@ export function MusicPage({ music }: { music: MusicController }) {
 
           <div className={isPlaying ? 'music-turntable spinning' : 'music-turntable'}>
             <div className="music-record-rings" aria-hidden="true" />
+            <svg className="music-progress-ring" viewBox="0 0 100 100" aria-hidden="true">
+              <defs>
+                <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#6de8ff" />
+                  <stop offset="50%" stopColor="#ff5bb4" />
+                  <stop offset="100%" stopColor="#9dff77" />
+                </linearGradient>
+                <filter id="progressGlow">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                  <feMerge>
+                    <feMergeNode in="coloredBlur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <circle className="music-progress-ring-bg" cx="50" cy="50" r="46" />
+              <circle
+                className="music-progress-ring-fill"
+                cx="50"
+                cy="50"
+                r="46"
+                style={{ '--progress': progress } as CSSProperties}
+              />
+            </svg>
             <img src={activeTrack.cover} alt="" />
           </div>
 
