@@ -451,7 +451,7 @@
 
 .music-spectrum-canvas {
   width: 100%;
-  height: 48px;
+  height: clamp(48px, 8vh, 86px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(7, 11, 20, 0.68);
   clip-path: polygon(22px 0, 100% 0, 100% calc(100% - 28px), calc(100% - 28px) 100%, 0 100%, 0 22px);
