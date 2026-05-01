@@ -3,6 +3,8 @@
 MyWeb 是一个基于 React、Vite、TypeScript 构建的个人互动网页档案，后端使用轻量级的 Node.js + MySQL。该项目通过动态丰富的视觉界面展示回忆、照片、音乐、游戏、项目、技能和留言板信息。
 
 前端可以独立运行，使用本地备用数据；后端则为本地开发和同局域网预览提供来自 MySQL 的真实数据。
+
+[点击浏览 MyWeb](https://my-personal-web-omega.vercel.app/)
 ![首页截图](public/homepage.png)
 
 ## 功能特性
