@@ -1,0 +1,494 @@
+.music-page {
+  min-height: 100vh;
+}
+
+.music-stage {
+  position: relative;
+  display: grid;
+  min-height: 100vh;
+  gap: 20px;
+  padding-top: 112px;
+  overflow: hidden;
+}
+
+.music-stage::before,
+.music-stage::after {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+}
+
+.music-stage::before {
+  inset: 96px 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(109, 232, 255, 0.6), transparent);
+}
+
+.music-stage::after {
+  right: 4%;
+  bottom: 12%;
+  width: min(460px, 46vw);
+  height: 240px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  clip-path: polygon(0 0, 86% 0, 100% 22%, 100% 100%, 16% 100%, 0 78%);
+  transform: rotate(-8deg);
+}
+
+.music-stage-copy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 6px;
+  width: min(620px, 100%);
+}
+
+.music-stage-copy > span {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  border-left: 2px solid var(--cyan);
+  color: var(--cyan);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.music-stage-copy h1 {
+  margin: 0;
+  font-size: clamp(4.2rem, 12vw, 9.2rem);
+  line-height: 0.78;
+  letter-spacing: 0;
+}
+
+.music-stage-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+  font-weight: 800;
+}
+
+.music-orbit-field {
+  position: absolute;
+  inset: 130px 0 170px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.music-orbit-node {
+  position: absolute;
+  left: var(--node-x);
+  top: var(--node-y);
+  display: grid;
+  width: var(--node-size);
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.08) 0 42%, transparent 43%),
+    rgba(12, 16, 26, 0.62);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.28s ease;
+}
+
+.music-orbit-node:hover,
+.music-orbit-node.active {
+  border-color: rgba(109, 232, 255, 0.72);
+  background:
+    radial-gradient(circle, rgba(109, 232, 255, 0.12) 0 42%, transparent 43%),
+    rgba(12, 28, 44, 0.74);
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.music-orbit-node img {
+  width: 62%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.music-orbit-node.active::after {
+  position: absolute;
+  inset: 8px;
+  content: "";
+  border: 2px dashed rgba(109, 232, 255, 0.7);
+  border-radius: inherit;
+  animation: music-spin 12s linear infinite;
+}
+
+.music-console {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  width: min(900px, 100%);
+  height: clamp(440px, calc(100vh - 260px), 540px);
+  min-height: 0;
+  grid-template-columns: 190px minmax(300px, 1fr) 190px;
+  grid-template-rows: minmax(210px, 1fr) auto auto auto;
+  gap: 12px;
+  align-items: center;
+  justify-self: center;
+  margin-top: -10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background:
+    linear-gradient(135deg, rgba(109, 232, 255, 0.12), transparent 28%),
+    linear-gradient(315deg, rgba(255, 91, 180, 0.1), transparent 32%),
+    rgba(13, 18, 30, 0.86);
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.46);
+  clip-path: polygon(46px 0, calc(100% - 42px) 0, 100% 54px, 100% calc(100% - 68px), calc(100% - 54px) 100%, 44px 100%, 0 calc(100% - 58px), 0 46px);
+  padding: 28px;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+}
+
+.music-console::before {
+  position: absolute;
+  inset: 18px;
+  content: "";
+  border: 1px solid rgba(109, 232, 255, 0.12);
+  clip-path: polygon(34px 0, 100% 0, 100% calc(100% - 34px), calc(100% - 34px) 100%, 0 100%, 0 34px);
+  pointer-events: none;
+}
+
+.music-console-info,
+.music-track-meta,
+.music-volume-module,
+.music-console-actions {
+  position: relative;
+  z-index: 2;
+}
+
+.music-console-info {
+  display: grid;
+  gap: 8px;
+  align-self: start;
+}
+
+.music-console-info span,
+.music-track-meta span,
+.music-spectrum-shell span,
+.music-track-chip span {
+  color: var(--cyan);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.music-console-info strong {
+  color: var(--acid);
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  line-height: 0.9;
+}
+
+.music-console-info small {
+  max-width: 150px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.music-turntable {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  width: min(250px, 100%);
+  aspect-ratio: 1;
+  place-items: center;
+  justify-self: center;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, transparent 0 41%, rgba(255, 255, 255, 0.18) 42% 44%, transparent 45%),
+    radial-gradient(circle, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.28));
+}
+
+.music-turntable img {
+  width: 52%;
+  aspect-ratio: 1;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.music-turntable > span {
+  position: absolute;
+  inset: 46%;
+  border-top: 18px solid var(--cyan);
+  border-right: 8px solid transparent;
+  border-left: 8px solid transparent;
+  opacity: 0.8;
+  transform-origin: center 24px;
+}
+
+.music-record-rings {
+  position: absolute;
+  inset: 6%;
+  border: 8px solid rgba(255, 255, 255, 0.22);
+  border-radius: inherit;
+  background:
+    repeating-conic-gradient(from 0deg, rgba(255, 255, 255, 0.72) 0 7deg, transparent 7deg 13deg),
+    radial-gradient(circle, transparent 0 56%, rgba(7, 9, 15, 0.9) 57% 63%, transparent 64%);
+  mask-image: radial-gradient(circle, transparent 0 45%, #000 46% 77%, transparent 78%);
+}
+
+.music-turntable.spinning .music-record-rings,
+.music-turntable.spinning img {
+  animation: music-spin 10s linear infinite;
+}
+
+.music-armature {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  min-height: 220px;
+  align-self: center;
+}
+
+.music-armature i {
+  position: absolute;
+  top: 34px;
+  right: 20px;
+  width: 72px;
+  aspect-ratio: 1;
+  border: 10px solid rgba(255, 255, 255, 0.78);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 12px rgba(255, 255, 255, 0.08);
+}
+
+.music-armature b {
+  position: absolute;
+  top: 76px;
+  right: 58px;
+  width: 190px;
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.16), rgba(109, 232, 255, 0.76));
+  transform: rotate(104deg);
+  transform-origin: right center;
+}
+
+.music-track-meta {
+  display: grid;
+  grid-column: 1 / 3;
+  gap: 6px;
+  min-width: 0;
+}
+
+.music-track-meta h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: clamp(1.45rem, 3.2vw, 2.45rem);
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.music-track-meta p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.music-console-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.music-console-actions button,
+.music-volume-module {
+  border: 1px solid rgba(109, 232, 255, 0.28);
+  background: rgba(109, 232, 255, 0.08);
+  color: var(--text);
+  clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+}
+
+.music-console-actions button {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  cursor: pointer;
+}
+
+.music-console-actions .music-main-action {
+  width: 64px;
+  border-color: rgba(157, 255, 119, 0.48);
+  background: rgba(32, 255, 0, 0.12);
+  color: var(--acid);
+}
+
+.music-console-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.music-volume-module {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 12px;
+}
+
+.music-volume-module input {
+  width: 100%;
+  accent-color: var(--acid);
+}
+
+.music-volume-module strong {
+  min-width: 44px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.music-spectrum-shell {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 10px;
+  width: 100%;
+  justify-self: stretch;
+}
+
+.music-spectrum-shell > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cyan);
+}
+
+.music-spectrum-canvas {
+  width: 100%;
+  height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(7, 11, 20, 0.68);
+  clip-path: polygon(22px 0, 100% 0, 100% calc(100% - 28px), calc(100% - 28px) 100%, 0 100%, 0 22px);
+}
+
+.music-track-rail {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.music-track-chip {
+  display: grid;
+  min-height: 154px;
+  grid-template-columns: 56px 1fr;
+  gap: 8px 12px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(14, 18, 30, 0.74);
+  color: var(--text);
+  text-align: left;
+  clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 18px);
+  cursor: pointer;
+  padding: 14px;
+  backdrop-filter: blur(16px);
+}
+
+.music-track-chip.active {
+  border-color: rgba(255, 91, 180, 0.6);
+  background:
+    linear-gradient(135deg, rgba(255, 91, 180, 0.18), transparent 72%),
+    rgba(20, 24, 42, 0.82);
+}
+
+.music-track-chip img {
+  grid-row: 1 / 4;
+  width: 56px;
+  aspect-ratio: 1;
+  clip-path: polygon(16% 0, 100% 0, 84% 100%, 0 100%);
+  object-fit: cover;
+}
+
+.music-track-chip strong,
+.music-track-chip small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music-track-chip strong {
+  align-self: end;
+  font-size: 1rem;
+}
+
+.music-track-chip small {
+  color: var(--muted);
+}
+
+@keyframes music-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 820px) {
+  .music-console {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    height: auto;
+    min-height: 0;
+  }
+
+  .music-console-info,
+  .music-track-meta,
+  .music-console-actions,
+  .music-volume-module {
+    grid-column: 1;
+  }
+
+  .music-armature {
+    display: none;
+  }
+
+  .music-turntable {
+    width: min(380px, 80vw);
+  }
+}
+
+@media (max-width: 680px) {
+  .music-stage {
+    padding-top: 72px;
+  }
+
+  .music-stage-copy h1 {
+    font-size: clamp(3.6rem, 22vw, 5.8rem);
+  }
+
+  .music-orbit-field {
+    display: none;
+  }
+
+  .music-console {
+    padding: 24px 18px 26px;
+  }
+
+  .music-turntable {
+    width: min(230px, 75vw);
+  }
+
+  .music-console-actions {
+    justify-content: flex-start;
+  }
+
+  .music-spectrum-canvas {
+    height: 130px;
+  }
+
+  .music-track-rail {
+    grid-template-columns: 1fr;
+  }
+}

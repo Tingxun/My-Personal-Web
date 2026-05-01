@@ -12,6 +12,7 @@ import { GuestbookPage } from './pages/GuestbookPage'
 import { HomePage } from './pages/HomePage'
 import { LabPage } from './pages/LabPage'
 import { MemoriesPage } from './pages/MemoriesPage'
+import { MusicPage } from './pages/MusicPage'
 import type { PageId } from './types'
 import { getPageFromHash } from './utils/routes'
 
@@ -130,14 +131,15 @@ function App() {
       <main id="top">
         <AnimatePresence mode="wait">
           {activePage === 'home' ? <HomePage goToPage={goToPage} /> : null}
-          {activePage === 'memories' ? <MemoriesPage music={music} photos={content.photos} games={content.games} /> : null}
+          {activePage === 'music' ? <MusicPage music={music} /> : null}
+          {activePage === 'memories' ? <MemoriesPage photos={content.photos} games={content.games} /> : null}
           {activePage === 'lab' ? <LabPage projects={content.projects} skills={content.skills} /> : null}
           {activePage === 'guestbook' ? <GuestbookPage /> : null}
         </AnimatePresence>
 
         <DistortionFooter />
       </main>
-      <PersistentMusicDock music={music} goToPage={goToPage} />
+      {activePage !== 'music' ? <PersistentMusicDock music={music} goToPage={goToPage} /> : null}
     </div>
   )
 }

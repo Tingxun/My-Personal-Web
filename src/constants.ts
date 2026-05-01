@@ -2,6 +2,7 @@ import type { PageId } from './types'
 
 export const pages: Array<{ id: PageId; label: string; hash: string }> = [
   { id: 'home', label: 'Overview', hash: '#home' },
+  { id: 'music', label: 'Music', hash: '#music' },
   { id: 'memories', label: 'Memories', hash: '#memories' },
   { id: 'lab', label: 'Lab', hash: '#lab' },
   { id: 'guestbook', label: 'Guestbook', hash: '#guestbook' },
