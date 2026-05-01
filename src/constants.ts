@@ -7,9 +7,9 @@ export const pages: Array<{ id: PageId; label: string; hash: string }> = [
   { id: 'guestbook', label: 'Guestbook', hash: '#guestbook' },
 ]
 
-export const PHOTO_INITIAL_COUNT = 5
+export const PHOTO_INITIAL_COUNT = 8
 export const PHOTO_LOAD_STEP = 6
-export const PHOTO_MAX_LOAD_COUNT = 40
+export const PHOTO_MAX_LOAD_COUNT = 24
 
 export const sectionMotion = {
   initial: false,
