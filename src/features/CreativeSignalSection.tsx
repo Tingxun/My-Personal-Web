@@ -1,5 +1,13 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useRef, useState } from 'react'
+import {
+  motion,
+  useAnimationFrame,
+  useMotionValue,
+  useScroll,
+  useSpring,
+  useTransform,
+  useVelocity,
+} from 'framer-motion'
 import { ArrowRight, Disc3, Headphones, Layers3, Radio, Zap } from 'lucide-react'
 import { sectionMotion } from '../constants'
 import type { PageId } from '../types'
@@ -10,15 +18,47 @@ const signalCards = [
   { icon: <Zap size={22} />, label: 'Motion', title: '鼠标响应场', text: '背景、卡片和光标热点会跟随你的浏览节奏变化。' },
 ]
 
+function wrapRange(min: number, max: number, value: number) {
+  const range = max - min
+  return ((((value - min) % range) + range) % range) + min
+}
+
 export function CreativeSignalSection({ goToPage }: { goToPage: (page: PageId) => void }) {
   const [activeSignal, setActiveSignal] = useState(0)
+  const baseX = useMotionValue(0)
+  const directionFactor = useRef(1)
+  const { scrollY } = useScroll()
+  const scrollVelocity = useVelocity(scrollY)
+  const smoothVelocity = useSpring(scrollVelocity, {
+    damping: 48,
+    stiffness: 420,
+  })
+  const velocityFactor = useTransform(smoothVelocity, [-1400, 0, 1400], [-4.5, 0, 4.5], {
+    clamp: false,
+  })
+  const marqueeX = useTransform(baseX, (value) => `${wrapRange(-50, 0, value)}%`)
+
+  useAnimationFrame((_, delta) => {
+    const velocity = velocityFactor.get()
+
+    if (velocity < -0.01) {
+      directionFactor.current = -1
+    } else if (velocity > 0.01) {
+      directionFactor.current = 1
+    }
+
+    const baseMove = directionFactor.current * 4.2 * (delta / 1000)
+    const scrollBoost = 1 + Math.min(6, Math.abs(velocity))
+
+    baseX.set(baseX.get() + baseMove * scrollBoost)
+  })
 
   return (
     <motion.section className="section creative-signal" {...sectionMotion}>
-      <div className="kinetic-marquee" aria-hidden="true">
+      <motion.div className="kinetic-marquee" style={{ x: marqueeX }} aria-hidden="true">
         <span>BE CURIOUS / KEEP BUILDING / STAY VISUAL / </span>
         <span>BE CURIOUS / KEEP BUILDING / STAY VISUAL / </span>
-      </div>
+      </motion.div>
       <div className="signal-layout">
         <div className="signal-copy">
           <span className="eyebrow">

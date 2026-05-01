@@ -13,7 +13,7 @@
   text-transform: uppercase;
   white-space: nowrap;
   text-shadow: 0 0 30px rgba(32, 255, 0, 0.26);
-  animation: marqueeSlide 16s linear infinite;
+  will-change: transform;
 }
 
 .kinetic-marquee span {
